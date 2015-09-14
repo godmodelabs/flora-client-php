@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+
+<!-- TODO: change bootstrap attribute to vendor/autoload.php -->
+<phpunit backupGlobals="false"
+         backupStaticAttributes="false"
+         bootstrap="test/bootstrap.php"
+         colors="true"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true">
+    <testsuites>
+        <testsuite name="Flora client">
+            <directory>test</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

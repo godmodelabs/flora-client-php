@@ -1,0 +1,12 @@
+{
+  "statusCode":200,
+  "headers":{
+    "Date":"Wed, 15 Apr 2006 12:28:58 GMT",
+    "Expires":"Wed, 15 Apr 2006 14:29:58 +0200",
+    "Vary":"Accept-Encoding",
+    "Connection":"close",
+    "Content-Type":"application/json"
+  },
+  "body":"{\"meta\":{},\"data\":{\"id\":1337,\"firstname\":\"John\",\"lastname\":\"Doe\"},\"error\":null,\"cursor\":null}"
+}
+
