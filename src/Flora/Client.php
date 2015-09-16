@@ -97,7 +97,8 @@ class Client
         }
 
         $result = $response->getBody();
-        if (in_array('application/json', $response->getHeader('Content-Type'))) $result = json_decode($result);
+        $contentType = $response->getHeaderLine('Content-Type');
+        if (strpos($contentType, 'application/json') !== false) $result = json_decode($result);
         $statusCode = $response->getStatusCode();
         if ($statusCode < 400) return $result;
 
