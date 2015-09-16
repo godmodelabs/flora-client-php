@@ -27,9 +27,11 @@
         }
     },
     "require": {
-        "guzzlehttp/guzzle": "~6.0"
+        "guzzlehttp/guzzle": "~6.0",
+        "godmodelabs/flora-client-php-auth": "dev-master"
     },
     "require-dev": {
         "phpunit/phpunit": "~4.6"
-    }
+    },
+    "minimum-stability": "dev"
 }
