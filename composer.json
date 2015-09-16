@@ -27,6 +27,7 @@
         }
     },
     "require": {
+        "php": ">=5.5.0",
         "guzzlehttp/guzzle": "~6.0",
         "godmodelabs/flora-client-php-auth": "dev-master"
     },
