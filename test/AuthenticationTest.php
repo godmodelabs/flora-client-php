@@ -16,11 +16,26 @@ class AuthenticationTest extends FloraClientTest
         $this->mockHandler->append(new Response());
     }
 
+    public function testNoProviderConfiguredException()
+    {
+        $this->setExpectedException('\\Flora\\Exception', 'Authentication provider is not configured');
+
+        $this->client->execute([
+            'resource'      => 'user',
+            'id'            => 1337,
+            'authenticate'  => true
+        ]);
+    }
+
     public function testBasicAuthenticationProvider()
     {
         $authProvider = new AuthProvider(new BasicAuthenticationStrategy('johndoe', 'secret'));
         $this->client->setAuthProvider($authProvider);
-        $this->client->execute(['resource' => 'user', 'id' => 1337]);
+        $this->client->execute([
+            'resource'      => 'user',
+            'id'            => 1337,
+            'authenticate'  => true
+        ]);
 
         $request = $this->mockHandler->getLastRequest();
 
@@ -45,7 +60,11 @@ class AuthenticationTest extends FloraClientTest
 
         $authProvider = new AuthProvider(new OAuth2Strategy($oauth2ProviderMock));
         $this->client->setAuthProvider($authProvider);
-        $this->client->execute(['resource' => 'user', 'id' => 1337]);
+        $this->client->execute([
+            'resource'      => 'user',
+            'id'            => 1337,
+            'authenticate'  => true
+        ]);
 
         $request = $this->mockHandler->getLastRequest();
 

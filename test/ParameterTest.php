@@ -2,7 +2,9 @@
 
 namespace Flora\Client\Test;
 
+use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
+use Psr\Http\Message\RequestInterface;
 
 class ParameterTest extends FloraClientTest
 {
@@ -107,5 +109,30 @@ class ParameterTest extends FloraClientTest
         $request = $this->mockHandler->getLastRequest();
 
         $this->assertEquals($expectedQueryString, $request->getUri()->getQuery());
+    }
+
+    public function testAuthenticateParameter()
+    {
+        /** @var \Flora\Auth\Provider $authProviderMock */
+        $authProviderMock = $this->getMockBuilder('\\Flora\\Auth\\Provider')
+            ->disableOriginalConstructor()
+            ->setMethods(['authenticate'])
+            ->getMock();
+
+        $authProviderMock
+            ->expects($this->once())
+            ->method('authenticate')
+            ->with($this->callback(function ($request) {
+                return $request instanceof RequestInterface;
+            }))
+            ->will($this->returnValue(new Request('GET', 'http://api.example.com/')));
+
+        $this->client
+            ->setAuthProvider($authProviderMock)
+            ->execute([
+                'resource'      => 'user',
+                'id'            => 1337,
+                'authenticate'  => true
+            ]);
     }
 }

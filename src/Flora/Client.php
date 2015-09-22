@@ -4,8 +4,6 @@ namespace Flora;
 
 use Flora\Auth\Provider as AuthProvider;
 use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Stream;
 use GuzzleHttp\Psr7\Uri;
@@ -33,6 +31,11 @@ class Client
     ];
 
     /**
+     * @var AuthProvider
+     */
+    private $authProvider;
+
+    /**
      * @param string $url URL of Flora instance
      * @param array $options {
      *      @var HttpClient     $httpClient             optional    Http client instance handling API requests
@@ -53,17 +56,18 @@ class Client
     /**
      * @param array $params {
      *      @var string             $resource Flora resource
-     *      @var int|string         $id         optional    Unique item identifier
-     *      @var string             $format     optional    Output format (default json)
-     *      @var string             $action     optional    API action (default: retrieve)
-     *      @var string             $select     optional    Retrieve only specified attributes
-     *      @var string             $filter     optional    Filter items by criteria
-     *      @var int                $limit      optional    Limit result set
-     *      @var int                $page       optional    Paginate through result set
-     *      @var string             $search     optional    Search items by full-text search
-     *      @var bool               $cache      optional    En-/disable caching (default: true)
-     *      @var string             $httpMethod optional    Explicitly set/override HTTP (GET, POST,...) method
-     *      @var array|\stdClass    $data       optional    Send $data as JSON
+     *      @var int|string         $id             optional    Unique item identifier
+     *      @var string             $format         optional    Output format (default json)
+     *      @var string             $action         optional    API action (default: retrieve)
+     *      @var string             $select         optional    Retrieve only specified attributes
+     *      @var string             $filter         optional    Filter items by criteria
+     *      @var int                $limit          optional    Limit result set
+     *      @var int                $page           optional    Paginate through result set
+     *      @var string             $search         optional    Search items by full-text search
+     *      @var bool               $cache          optional    En-/disable caching (default: true)
+     *      @var bool               $authenticate   optional    Use authentication provider to add some authentication information to request
+     *      @var string             $httpMethod     optional    Explicitly set/override HTTP (GET, POST,...) method
+     *      @var array|\stdClass    $data           optional    Send $data as JSON
      * }
      * @return \stdClass
      * @throws \Flora\Exception
@@ -87,6 +91,14 @@ class Client
 
         $httpMethod = $this->getHttpMethod($params);
         $request = new Request($httpMethod, $uri, ['Referer' => $this->getCurrentUri()]);
+
+        if (isset($params['authenticate'])) {
+            if ((bool) $params['authenticate']) {
+                if ($this->authProvider === null) throw new Exception('Authentication provider is not configured');
+                $request = $this->authProvider->authenticate($request);
+            }
+            unset($params['authenticate']);
+        }
 
         if (!empty($params)) $request = $this->applyParameters($request, $params);
 
@@ -200,14 +212,14 @@ class Client
     }
 
     /**
-     * Add authentication information to request using given provider
+     * Use given provider to add some authentication information to request
      *
      * @param AuthProvider $authProvider
+     * @return $this
      */
     public function setAuthProvider(AuthProvider $authProvider)
     {
-        $stack = new HandlerStack($this->httpClient->getConfig('handler'));
-        $stack->push(Middleware::mapRequest([$authProvider, 'authenticate']));
-        $this->httpClient = new HttpClient(['handler' => $stack]);
+        $this->authProvider = $authProvider;
+        return $this;
     }
 }
