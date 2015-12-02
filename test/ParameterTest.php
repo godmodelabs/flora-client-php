@@ -135,4 +135,26 @@ class ParameterTest extends FloraClientTest
                 'authenticate'  => true
             ]);
     }
+
+    public function testDefaultParameter()
+    {
+        $this->client
+            ->setDefaultParams(['portalId' => 1])
+            ->execute(['resource' => 'user', 'id' => 1337]);
+
+        $request = $this->mockHandler->getLastRequest();
+
+        $this->assertContains('portalId=1', $request->getUri()->getQuery());
+    }
+
+    public function testOverwriteDefaultParameter()
+    {
+        $this->client
+            ->setDefaultParams(['portalId' => 1])
+            ->execute(['resource' => 'user', 'id' => 1337, 'portalId' => 4711]);
+
+        $request = $this->mockHandler->getLastRequest();
+
+        $this->assertContains('portalId=4711', $request->getUri()->getQuery());
+    }
 }

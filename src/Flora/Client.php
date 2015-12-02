@@ -36,13 +36,19 @@ class Client
     private $authProvider;
 
     /**
+     * @var array
+     */
+    private $defaultParams = [];
+
+    /**
      * @param string $url URL of Flora instance
      * @param array $options {
      *      @var HttpClient     $httpClient             optional    Http client instance handling API requests
      *      @var array $httpOptions optional {
      *          @var int    $timeout    Request timeout
      *      }
-     *      @var AuthProvider $authProvider             optional    Authenticate requests with given provider
+     *      @var AuthProvider   $authProvider           optional    Authenticate requests with given provider
+     *      @var array          $defaultParams          optional    Automatically add params to each request
      * }
      */
     public function __construct($url, array $options = [])
@@ -51,6 +57,7 @@ class Client
         $this->httpClient = !isset($options['httpClient']) ? new HttpClient() : $options['httpClient'];
         if (isset($options['httpOptions'])) $this->setHttpOptions($options['httpOptions']);
         if (isset($options['authProvider'])) $this->setAuthProvider($options['authProvider']);
+        if (isset($options['defaultParams'])) $this->setDefaultParams($options['defaultParams']);
     }
 
     /**
@@ -100,6 +107,7 @@ class Client
             unset($params['authenticate']);
         }
 
+        if (!empty($this->defaultParams)) $params = array_merge($this->defaultParams, $params);
         if (!empty($params)) $request = $this->applyParameters($request, $params);
 
         try {
@@ -220,6 +228,12 @@ class Client
     public function setAuthProvider(AuthProvider $authProvider)
     {
         $this->authProvider = $authProvider;
+        return $this;
+    }
+
+    public function setDefaultParams(array $params)
+    {
+        $this->defaultParams = $params;
         return $this;
     }
 }
