@@ -7,7 +7,6 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\Psr7\Stream;
-use Psr\Http\Message\ResponseInterface;
 
 /**
  * Base class for Flora client tests
