@@ -2,11 +2,12 @@
 
 namespace Flora\Client\Test;
 
-use Flora\Auth\Provider as AuthProvider;
+use GuzzleHttp\Psr7\Response;
+
+/*use Flora\Auth\Provider as AuthProvider;
 use Flora\Auth\Strategy\BasicAuthentication as BasicAuthenticationStrategy;
 use Flora\Auth\Strategy\OAuth2 as OAuth2Strategy;
-use GuzzleHttp\Psr7\Response;
-use League\OAuth2\Client\Token\AccessToken;
+use League\OAuth2\Client\Token\AccessToken;*/
 
 class AuthenticationTest extends FloraClientTest
 {
@@ -27,7 +28,7 @@ class AuthenticationTest extends FloraClientTest
         ]);
     }
 
-    public function testAuthenticationProviderInteraction()
+    /*public function testAuthenticationProviderInteraction()
     {
         $authProvider = new AuthProvider(new BasicAuthenticationStrategy('johndoe', 'secret'));
         $this->client->setAuthProvider($authProvider);
@@ -41,5 +42,5 @@ class AuthenticationTest extends FloraClientTest
 
         $this->assertTrue($request->hasHeader('Authorization'), 'Authorization header not available');
         $this->assertEquals(['am9obmRvZTpzZWNyZXQ='], $request->getHeader('Authorization'));
-    }
+    }*/
 }
