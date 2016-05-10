@@ -122,14 +122,7 @@ class Client
         $statusCode = $response->getStatusCode();
         if ($statusCode < 400) return $result;
 
-        $message = $result->error->message;
-        if ($statusCode == 400) throw new Exception\BadRequest($message);
-        else if ($statusCode == 401) throw new Exception\Unauthorized($message);
-        else if ($statusCode == 403) throw new Exception\Forbidden($message);
-        else if ($statusCode == 404) throw new Exception\NotFound($message);
-        else if ($statusCode == 500) throw new Exception\Server($message);
-        else if ($statusCode == 503) throw new Exception\ServiceUnavailable($message);
-        else throw new Exception($message);
+        $this->throwError($statusCode, $result->error);
     }
 
     /**
@@ -235,5 +228,18 @@ class Client
     {
         $this->defaultParams = $params;
         return $this;
+    }
+
+    private function throwError($statusCode, \stdClass $error)
+    {
+        $message = $error->message;
+
+        if ($statusCode == 400) throw new Exception\BadRequest($message);
+        else if ($statusCode == 401) throw new Exception\Unauthorized($message);
+        else if ($statusCode == 403) throw new Exception\Forbidden($message);
+        else if ($statusCode == 404) throw new Exception\NotFound($message);
+        else if ($statusCode == 500) throw new Exception\Server($message);
+        else if ($statusCode == 503) throw new Exception\ServiceUnavailable($message);
+        else throw new Exception($message);
     }
 }
