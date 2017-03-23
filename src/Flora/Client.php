@@ -180,6 +180,8 @@ class Client
                 $request = $request
                     ->withUri($request->getUri()->withQuery(http_build_query($params)))
                     ->withHeader('Content-Type', 'application/json');
+            } else {
+                $request = $request->withAddedHeader('Content-Type', 'application/x-www-form-urlencoded');
             }
 
             $request = $request->withBody($body);

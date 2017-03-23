@@ -31,6 +31,7 @@ class RequestMethodTest extends FloraClientTest
         $request = $this->mockHandler->getLastRequest();
 
         $this->assertEquals('POST', $request->getMethod());
+        $this->assertEquals('application/x-www-form-urlencoded', $request->getHeaderLine('Content-Type'));
     }
 
     public function testHttpMethodParameterOverwrite()
