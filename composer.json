@@ -28,8 +28,8 @@
     },
     "prefer-stable": true,
     "require": {
-        "php": ">=5.5.0",
-        "guzzlehttp/guzzle": "^6.0"
+        "php": ">=5.6.0",
+        "guzzlehttp/guzzle": "~6.2"
     },
     "require-dev": {
         "phpunit/phpunit": "^5.7"
