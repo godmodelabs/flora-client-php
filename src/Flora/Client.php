@@ -12,33 +12,26 @@ use Psr\Http\Message\RequestInterface;
 
 class Client
 {
-    /**
-     * @var Uri
-     */
+    /** @var Uri */
     private $uri;
 
-    /**
-     * @var HttpClient
-     */
+    /** @var HttpClient */
     private $httpClient;
 
-    /**
-     * @var array
-     */
+    /** @var array */
     private $httpOptions = [
         'http_errors'   => false,   // don't throw response with status code >= 400 as exception
         'timeout'       => 30       // Guzzle HTTP client waits forever by default
     ];
 
-    /**
-     * @var AuthProvider
-     */
+    /** @var AuthProvider */
     private $authProvider;
 
-    /**
-     * @var array
-     */
+    /** @var array */
     private $defaultParams = [];
+
+    /** @var array */
+    private $forceGetParams = [];
 
     /**
      * @param string $url URL of Flora instance
@@ -49,6 +42,7 @@ class Client
      *      }
      *      @var AuthProvider   $authProvider           optional    Authenticate requests with given provider
      *      @var array          $defaultParams          optional    Automatically add params to each request
+     *      @var array          $forceGetParams         optional    Params always send as part of the url
      * }
      */
     public function __construct($url, array $options = [])
@@ -58,6 +52,7 @@ class Client
         if (isset($options['httpOptions'])) $this->setHttpOptions($options['httpOptions']);
         if (isset($options['authProvider'])) $this->setAuthProvider($options['authProvider']);
         if (isset($options['defaultParams'])) $this->setDefaultParams($options['defaultParams']);
+        if (isset($options['forceGetParams'])) $this->setForceGetParams($options['forceGetParams']);
     }
 
     /**
@@ -108,7 +103,7 @@ class Client
         }
 
         if (!empty($this->defaultParams)) $params = array_merge($this->defaultParams, $params);
-        if (!empty($params)) $request = $this->applyParameters($request, $params);
+        if (!empty($params)) $request = $this->applyParameters($request, $params, $this->forceGetParams);
 
         try {
             $response = $this->httpClient->send($request, $this->httpOptions);
@@ -156,38 +151,53 @@ class Client
      *
      * @param RequestInterface $request
      * @param array $params
+     * @param array $forceGetParams Optional Transfer parameters as part of url
      * @return \Psr\Http\Message\RequestInterface
      */
-    private function applyParameters(RequestInterface $request, array $params)
+    private function applyParameters(RequestInterface $request, array $params, array $forceGetParams = [])
     {
         if (empty($params)) return $request;
 
         ksort($params);
-        $urlEncodedParams = http_build_query($params);
+        if ($request->getMethod() == 'GET') return $this->handleGetRequest($request, $params);
+        return $this->handlePostRequest($request, $params, $forceGetParams);
+    }
 
-        if ($request->getMethod() == 'GET') {
-            $uri = $request->getUri()->withQuery($urlEncodedParams);
-            $request = $request->withUri($uri);
-        } else {
-            $stream = fopen('php://memory', 'wb+');
-            $body   = new Stream($stream);
-            $body->write($urlEncodedParams);
+    private function handleGetRequest(RequestInterface $request, array $params)
+    {
+        $uri = $request->getUri()->withQuery(http_build_query($params));
+        return $request->withUri($uri);
+    }
 
-            if (array_key_exists('data', $params) && !empty($params['data'])) {
-                ftruncate($stream, 0);
-                $body->write(json_encode($params['data']));
-                unset($params['data']);
-                $request = $request
-                    ->withUri($request->getUri()->withQuery(http_build_query($params)))
-                    ->withHeader('Content-Type', 'application/json');
-            } else {
-                $request = $request->withAddedHeader('Content-Type', 'application/x-www-form-urlencoded');
+    private function handlePostRequest(RequestInterface $request, array $params, array $forceGetParams = [])
+    {
+        $isJsonRequest = array_key_exists('data', $params) && !empty($params['data']);
+
+        if (!empty($forceGetParams) && !$isJsonRequest) {
+            $getParams = [];
+            foreach ($forceGetParams as $defaultGetParam) {
+                if (!isset($params[$defaultGetParam])) continue;
+                $getParams[$defaultGetParam] = $params[$defaultGetParam];
+                unset($params[$defaultGetParam]);
             }
-
-            $request = $request->withBody($body);
+            $request = $request->withUri($request->getUri()->withQuery(http_build_query($getParams)));
         }
 
-        return $request;
+        $stream = fopen('php://memory', 'wb+');
+        $body   = new Stream($stream);
+
+        if ($isJsonRequest) {
+            $body->write(json_encode($params['data']));
+            unset($params['data']);
+            $request = $request
+                ->withUri($request->getUri()->withQuery(http_build_query($params)))
+                ->withHeader('Content-Type', 'application/json');
+        } else {
+            $body->write(http_build_query($params));
+            $request = $request->withAddedHeader('Content-Type', 'application/x-www-form-urlencoded');
+        }
+
+        return $request->withBody($body);
     }
 
     private function getCurrentUri()
@@ -229,6 +239,12 @@ class Client
     public function setDefaultParams(array $params)
     {
         $this->defaultParams = $params;
+        return $this;
+    }
+
+    public function setForceGetParams(array $forceGetParams)
+    {
+        $this->forceGetParams = $forceGetParams;
         return $this;
     }
 
