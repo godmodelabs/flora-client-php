@@ -31,7 +31,7 @@ class Client
     private $defaultParams = [];
 
     /** @var array */
-    private $forceGetParams = [];
+    private $forceGetParams = ['client_id', 'action', 'access_token'];
 
     /**
      * @param string $url URL of Flora instance
@@ -244,7 +244,7 @@ class Client
 
     public function setForceGetParams(array $forceGetParams)
     {
-        $this->forceGetParams = $forceGetParams;
+        if (count($forceGetParams)) $this->forceGetParams = array_merge($this->forceGetParams, $forceGetParams);
         return $this;
     }
 

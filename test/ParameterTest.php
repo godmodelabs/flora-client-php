@@ -14,15 +14,6 @@ class ParameterTest extends FloraClientTest
         $this->mockHandler->append(new Response());
     }
 
-    public function testActionParameter()
-    {
-        // non-retrieve actions are transmitted with HTTP POST request (if not overridden by httpMethod parameter)
-        $this->client->execute(['resource' => 'user', 'action' => 'awesomeAction']);
-        $request = $this->mockHandler->getLastRequest();
-
-        $this->assertEquals('action=awesomeAction', (string) $request->getBody());
-    }
-
     /**
      * @dataProvider parameters
      * @param string        $name      Parameter name
@@ -158,19 +149,40 @@ class ParameterTest extends FloraClientTest
         $this->assertContains('portalId=4711', $request->getUri()->getQuery());
     }
 
-    public function testForceGetParameter()
+    /**
+     * @param string $param
+     * @throws \Flora\Exception
+     * @dataProvider forceGetParamProvider
+     */
+    public function testDefaultGetParameters($param)
     {
         $this->client
-            ->setDefaultParams(['client_id' => 1])
-            ->setForceGetParams(['client_id'])
-            ->execute(['resource' => 'article', 'filter' => str_repeat('foo', 2048)]);
+            ->execute([
+                'resource' => 'article',
+                'filter' => str_repeat('foo', 2048),
+                $param => 'test'
+            ]);
 
         $request = $this->mockHandler->getLastRequest();
         $body = (string) $request->getBody();
 
-        $this->assertContains('client_id=1', $request->getUri()->getQuery());
+        $this->assertContains("$param=test", $request->getUri()->getQuery());
         $this->assertNotEmpty($body);
-        $this->assertNotContains('client_id=1', $body);
+        $this->assertNotContains("$param=test", $body);
+    }
+
+    public function testForceGetParameter()
+    {
+        $this->client
+            ->setDefaultParams(['client_id' => 1])
+            ->setForceGetParams(['foobar'])
+            ->execute([
+                'resource' => 'article',
+                'filter' => str_repeat('foo', 2048),
+                'foobar' => 1
+            ]);
+
+        $this->assertContains('foobar=1', $this->mockHandler->getLastRequest()->getUri()->getQuery());
     }
 
     public function testJsonForceGetParameter()
@@ -184,5 +196,17 @@ class ParameterTest extends FloraClientTest
 
         $this->assertContains('client_id=1', $request->getUri()->getQuery());
         $this->assertNotContains('client_id=1', (string) $request->getBody());
+    }
+
+    /**
+     * @return array
+     */
+    public function forceGetParamProvider()
+    {
+        return [
+            ['client_id'],
+            ['action'],
+            ['access_token']
+        ];
     }
 }
