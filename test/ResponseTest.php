@@ -37,4 +37,16 @@ class ResponseTest extends FloraClientTest
 
         $this->assertEquals('image-content', $response);
     }
+
+    public function testNonJsonErrorResponse()
+    {
+        $this->setExpectedException('\\Flora\\Exception\\NotFound', 'Not Found');
+
+        $responseBody = new Stream(fopen('php://memory', 'wb+'));
+        $responseBody->write('image-content');
+        $response = new Response(404, ['Content-Type' => 'text/html'], $responseBody);
+
+        $this->mockHandler->append($response);
+        $response = $this->client->execute(['resource' => 'user', 'id' => 1337, 'format' => 'image']);
+    }    
 }

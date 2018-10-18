@@ -117,7 +117,10 @@ class Client
         $statusCode = $response->getStatusCode();
         if ($statusCode < 400) return $result;
 
-        $this->throwError($statusCode, $result->error);
+        $this->throwError($statusCode, 
+            (strpos($contentType, 'application/json') !== false) 
+                ? $result->error
+                : (object)['message' => $response->getReasonPhrase()]);
     }
 
     /**
