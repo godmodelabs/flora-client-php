@@ -106,7 +106,7 @@ class Client
 
         try {
             $response = $this->httpClient->send($request, $this->httpOptions);
-        } catch (RequestException $e) {
+        } catch (\GuzzleHttp\Exception\GuzzleException $e) {
             throw new Exception($e->getMessage());
         }
 
