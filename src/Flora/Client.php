@@ -250,6 +250,17 @@ class Client
         return $this;
     }
 
+    /**
+     * @param $statusCode
+     * @param \stdClass $error
+     * @throws Exception
+     * @throws Exception\BadRequest
+     * @throws Exception\Forbidden
+     * @throws Exception\NotFound
+     * @throws Exception\Server
+     * @throws Exception\ServiceUnavailable
+     * @throws Exception\Unauthorized
+     */
     private function throwError($statusCode, \stdClass $error)
     {
         $message = $error->message;
