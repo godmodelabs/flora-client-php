@@ -3,7 +3,6 @@
 namespace Flora;
 
 use Flora\Auth\Provider as AuthProvider;
-use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Stream;
 use GuzzleHttp\Psr7\Uri;
@@ -89,7 +88,7 @@ class Client
             unset($params['cache']);
         }
 
-        if (isset($params['action']) && $params['action'] == 'retrieve') unset($params['action']);
+        if (isset($params['action']) && $params['action'] === 'retrieve') unset($params['action']);
 
         $httpMethod = $this->getHttpMethod($params);
         $request = new Request($httpMethod, $uri, ['Referer' => $this->getCurrentUri()]);
@@ -117,8 +116,8 @@ class Client
         $statusCode = $response->getStatusCode();
         if ($statusCode < 400) return $result;
 
-        $this->throwError($statusCode, 
-            (strpos($contentType, 'application/json') !== false) 
+        $this->throwError($statusCode,
+            (strpos($contentType, 'application/json') !== false)
                 ? $result->error
                 : (object)['message' => $response->getReasonPhrase()]);
     }
@@ -142,7 +141,7 @@ class Client
     {
         $httpMethod = 'GET';
 
-        if (isset($params['action']) && $params['action'] != 'retrieve') $httpMethod = 'POST';
+        if (isset($params['action']) && $params['action'] !== 'retrieve') $httpMethod = 'POST';
         if (strlen(http_build_query($params)) > 2000) $httpMethod = 'POST';
         if (isset($params['httpMethod'])) $httpMethod = strtoupper($params['httpMethod']);
 
@@ -162,7 +161,7 @@ class Client
         if (empty($params)) return $request;
 
         ksort($params);
-        if ($request->getMethod() == 'GET') return $this->handleGetRequest($request, $params);
+        if ($request->getMethod() === 'GET') return $this->handleGetRequest($request, $params);
         return $this->handlePostRequest($request, $params, $forceGetParams);
     }
 
@@ -205,12 +204,12 @@ class Client
 
     private function getCurrentUri()
     {
-        if (php_sapi_name() == 'cli') $currentUri = 'file://';
+        if (php_sapi_name() === 'cli') $currentUri = 'file://';
         elseif (isset($_SERVER['HTTP_HOST'])) $currentUri = 'http://' . $_SERVER['HTTP_HOST'];
         else $currentUri = 'unknown://';
 
         if (isset($_SERVER['REQUEST_URI'])) $currentUri .= $_SERVER['REQUEST_URI'];
-        elseif (php_sapi_name() == 'cli' && isset($_SERVER['argv'])) $currentUri .= implode(' ', $_SERVER['argv']);
+        elseif (php_sapi_name() === 'cli' && isset($_SERVER['argv'])) $currentUri .= implode(' ', $_SERVER['argv']);
         elseif (isset($_SERVER['SCRIPT_FILENAME'])) $currentUri .= $_SERVER['SCRIPT_FILENAME'];
 
         return $currentUri;
@@ -255,12 +254,12 @@ class Client
     {
         $message = $error->message;
 
-        if ($statusCode == 400) throw new Exception\BadRequest($message);
-        else if ($statusCode == 401) throw new Exception\Unauthorized($message);
-        else if ($statusCode == 403) throw new Exception\Forbidden($message);
-        else if ($statusCode == 404) throw new Exception\NotFound($message);
-        else if ($statusCode == 500) throw new Exception\Server($message);
-        else if ($statusCode == 503) throw new Exception\ServiceUnavailable($message);
+        if ($statusCode === 400) throw new Exception\BadRequest($message);
+        else if ($statusCode === 401) throw new Exception\Unauthorized($message);
+        else if ($statusCode === 403) throw new Exception\Forbidden($message);
+        else if ($statusCode === 404) throw new Exception\NotFound($message);
+        else if ($statusCode === 500) throw new Exception\Server($message);
+        else if ($statusCode === 503) throw new Exception\ServiceUnavailable($message);
         else throw new Exception($message);
     }
 }
