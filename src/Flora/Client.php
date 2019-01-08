@@ -204,12 +204,12 @@ class Client
 
     private function getCurrentUri()
     {
-        if (php_sapi_name() === 'cli') $currentUri = 'file://';
+        if (\PHP_SAPI === 'cli') $currentUri = 'file://';
         elseif (isset($_SERVER['HTTP_HOST'])) $currentUri = 'http://' . $_SERVER['HTTP_HOST'];
         else $currentUri = 'unknown://';
 
         if (isset($_SERVER['REQUEST_URI'])) $currentUri .= $_SERVER['REQUEST_URI'];
-        elseif (php_sapi_name() === 'cli' && isset($_SERVER['argv'])) $currentUri .= implode(' ', $_SERVER['argv']);
+        elseif (\PHP_SAPI === 'cli' && isset($_SERVER['argv'])) $currentUri .= implode(' ', $_SERVER['argv']);
         elseif (isset($_SERVER['SCRIPT_FILENAME'])) $currentUri .= $_SERVER['SCRIPT_FILENAME'];
 
         return $currentUri;
