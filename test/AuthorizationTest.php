@@ -14,11 +14,11 @@ class AuthorizationTest extends FloraClientTest
     }
 
     /**
-     * @throws Flora\Exception
+     * @throws Flora\Exception\ExceptionInterface
      */
     public function testNoProviderConfiguredException()
     {
-        $this->expectException(Flora\Exception::class);
+        $this->expectException(Flora\Exception\ImplementationException::class);
         $this->expectExceptionMessage('Authorization provider is not configured');
 
         $this->client->execute([
@@ -29,7 +29,7 @@ class AuthorizationTest extends FloraClientTest
     }
 
     /**
-     * @throws Flora\Exception
+     * @throws Flora\Exception\ExceptionInterface
      */
     public function testAuthorizationProviderInteraction()
     {

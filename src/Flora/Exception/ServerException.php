@@ -4,6 +4,6 @@ namespace Flora\Exception;
 
 use Flora;
 
-class NotFound extends Flora\Exception
+class ServerException extends RuntimeException
 {
 }

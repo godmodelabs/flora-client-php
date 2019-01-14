@@ -71,11 +71,12 @@ class Client
      *      @var array|\stdClass    $data           optional    Send $data as JSON
      * }
      * @return \stdClass
-     * @throws \Flora\Exception
+     * @throws Exception\ImplementationException
+     * @throws Exception\RuntimeException
      */
     public function execute(array $params)
     {
-        if (!isset($params['resource']) || empty($params['resource'])) throw new Exception('Resource must be set');
+        if (!isset($params['resource']) || empty($params['resource'])) throw new Exception\ImplementationException('Resource must be set');
 
         $uri = $this->uri->withPath($this->getPath($params));
 
@@ -106,7 +107,7 @@ class Client
         }
 
         if ($authorize) {
-            if ($this->authProvider === null) throw new Exception('Authorization provider is not configured');
+            if ($this->authProvider === null) throw new Exception\ImplementationException('Authorization provider is not configured');
             $request = $this->authProvider->authorize($request);
             unset($params['authenticate']);
         }
@@ -117,7 +118,7 @@ class Client
         try {
             $response = $this->httpClient->send($request, $this->httpOptions);
         } catch (\GuzzleHttp\Exception\GuzzleException $e) {
-            throw new Exception($e->getMessage());
+            throw new Exception\TransferException($e->getMessage(), $e->getCode(), $e);
         }
 
         $result = $response->getBody();
@@ -264,24 +265,24 @@ class Client
     /**
      * @param $statusCode
      * @param \stdClass $error
-     * @throws Exception
-     * @throws Exception\BadRequest
-     * @throws Exception\Forbidden
-     * @throws Exception\NotFound
-     * @throws Exception\Server
-     * @throws Exception\ServiceUnavailable
-     * @throws Exception\Unauthorized
+     * @throws Exception\RuntimeException
+     * @throws Exception\BadRequestException
+     * @throws Exception\ForbiddenException
+     * @throws Exception\NotFoundException
+     * @throws Exception\ServerException
+     * @throws Exception\ServiceUnavailableException
+     * @throws Exception\UnauthorizedException
      */
     private function throwError($statusCode, \stdClass $error)
     {
         $message = $error->message;
 
-        if ($statusCode === 400) throw new Exception\BadRequest($message);
-        else if ($statusCode === 401) throw new Exception\Unauthorized($message);
-        else if ($statusCode === 403) throw new Exception\Forbidden($message);
-        else if ($statusCode === 404) throw new Exception\NotFound($message);
-        else if ($statusCode === 500) throw new Exception\Server($message);
-        else if ($statusCode === 503) throw new Exception\ServiceUnavailable($message);
-        else throw new Exception($message);
+        if ($statusCode === 400) throw new Exception\BadRequestException($message);
+        else if ($statusCode === 401) throw new Exception\UnauthorizedException($message);
+        else if ($statusCode === 403) throw new Exception\ForbiddenException($message);
+        else if ($statusCode === 404) throw new Exception\NotFoundException($message);
+        else if ($statusCode === 500) throw new Exception\ServerException($message);
+        else if ($statusCode === 503) throw new Exception\ServiceUnavailableException($message);
+        else throw new Exception\RuntimeException($message);
     }
 }

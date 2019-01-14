@@ -38,7 +38,7 @@ abstract class FloraClientTest extends \PHPUnit_Framework_TestCase
      */
     protected function getHttpResponseFromFile($file)
     {
-        $content = file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . '_files' . DIRECTORY_SEPARATOR . $file);
+        $content = file_get_contents($file);
         $data = json_decode($content);
 
         $body = new Stream(fopen('php://memory', 'wb+'));

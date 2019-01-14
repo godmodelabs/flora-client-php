@@ -4,6 +4,6 @@ namespace Flora\Exception;
 
 use Flora;
 
-class Server extends Flora\Exception
+class BadRequestException extends RuntimeException
 {
 }

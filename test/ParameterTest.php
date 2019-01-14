@@ -152,7 +152,6 @@ class ParameterTest extends FloraClientTest
 
     /**
      * @param string $param
-     * @throws \Flora\Exception
      * @dataProvider forceGetParamProvider
      */
     public function testDefaultGetParameters($param)

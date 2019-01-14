@@ -2,8 +2,15 @@
 
 namespace Flora\Client\Test;
 
-use Flora\Client as FloraClient;
-use \GuzzleHttp\Client as HttpClient;
+use Flora\Exception\BadRequestException;
+use Flora\Exception\ForbiddenException;
+use Flora\Exception\ImplementationException;
+use Flora\Exception\NotFoundException;
+use Flora\Exception\RuntimeException;
+use Flora\Exception\ServerException;
+use Flora\Exception\ServiceUnavailableException;
+use Flora\Exception\TransferException;
+use Flora\Exception\UnauthorizedException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
@@ -11,17 +18,17 @@ use GuzzleHttp\Psr7\Response;
 class ExceptionTest extends FloraClientTest
 {
     /**
-     * @dataProvider exceptions
-     * @param string $exception
+     * @param string $exceptionClass
      * @param string $message
-     * @throws \Flora\Exception
+     * @param string $responseFile
+     * @dataProvider exceptionDataProvider
      */
-    public function testRequestExceptions($exception, $message)
+    public function testRequestExceptions($exceptionClass, $message, $responseFile)
     {
-        $this->setExpectedException('\\Flora\\Exception\\' . $exception, $message);
+        $this->expectException($exceptionClass);
+        $this->expectExceptionMessage($message);
 
-        $file = strtolower($exception) . '.json';
-        $response = $this->getHttpResponseFromFile($file);
+        $response = $this->getHttpResponseFromFile($responseFile);
         $this->mockHandler->append($response);
 
         $this->client->execute(['resource' => 'user', 'id' => 1337]);
@@ -29,10 +36,9 @@ class ExceptionTest extends FloraClientTest
 
     public function testFallbackException()
     {
-        $this->setExpectedException('\\Flora\\Exception', 'Fallback message');
+        $this->expectException(RuntimeException::class);
 
-        $file = strtolower('unknown') . '.json';
-        $response = $this->getHttpResponseFromFile($file);
+        $response = $this->getHttpResponseFromFile(__DIR__ . '/_files/unknown.json');
         $this->mockHandler->append($response);
 
         $this->client->execute(['resource' => 'user', 'id' => 1337]);
@@ -40,12 +46,12 @@ class ExceptionTest extends FloraClientTest
 
     public function testHttpRuntimeExceptions()
     {
-        $this->setExpectedException('\\Flora\\Exception');
+        $this->expectException(TransferException::class);
 
         $this->mockHandler->append(
             new RequestException(
             'Cannot connect to server',
-            new Request('GET', 'http://non-existent.api.localhost/user/id')
+                new Request('GET', 'http://non-existent.api.localhost/user/id')
             )
         );
 
@@ -54,21 +60,23 @@ class ExceptionTest extends FloraClientTest
 
     public function testResourceParameterRequiredException()
     {
-        $this->setExpectedException('\\Flora\\Exception', 'Resource must be set');
+        $this->expectException(ImplementationException::class);
+        $this->expectExceptionMessage('Resource must be set');
+
         $this->mockHandler->append(new Response());
 
         $this->client->execute([]);
     }
 
-    public function exceptions()
+    public function exceptionDataProvider()
     {
         return [
-            ['BadRequest', 'Something went wrong'],
-            ['Unauthorized', 'Authentication required'],
-            ['Forbidden', 'You\'re not allowed to access this item'],
-            ['NotFound', 'Item not found'],
-            ['Server', 'Something bad happened'],
-            ['ServiceUnavailable', 'Please try again later']
+            [BadRequestException::class, 'Something went wrong', __DIR__ . '/_files/badrequest.json'],
+            [UnauthorizedException::class, 'Authentication required', __DIR__ . '/_files/unauthorized.json'],
+            [ForbiddenException::class, 'You\'re not allowed to access this item', __DIR__ . '/_files/forbidden.json'],
+            [NotFoundException::class, 'Item not found', __DIR__ . '/_files/notfound.json'],
+            [ServerException::class, 'Something bad happened', __DIR__ . '/_files/server.json'],
+            [ServiceUnavailableException::class, 'Please try again later', __DIR__ . '/_files/serviceunavailable.json']
         ];
     }
 }
