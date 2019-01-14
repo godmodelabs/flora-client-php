@@ -2,7 +2,6 @@
 
 namespace Flora;
 
-use Flora\Auth\Provider as AuthProvider;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Stream;
 use GuzzleHttp\Psr7\Uri;
@@ -23,7 +22,7 @@ class Client
         'timeout'       => 30       // Guzzle HTTP client waits forever by default
     ];
 
-    /** @var AuthProvider */
+    /** @var AuthProviderInterface */
     private $authProvider;
 
     /** @var array */
@@ -39,15 +38,16 @@ class Client
      *      @var array $httpOptions optional {
      *          @var int    $timeout    Request timeout
      *      }
-     *      @var AuthProvider   $authProvider           optional    Authenticate requests with given provider
-     *      @var array          $defaultParams          optional    Automatically add params to each request
-     *      @var array          $forceGetParams         optional    Params always send as part of the url
+     *      @var AuthProviderInterface  $authProvider           optional    Authorize requests with given provider
+     *      @var array                  $defaultParams          optional    Automatically add params to each request
+     *      @var array                  $forceGetParams         optional    Params always send as part of the url
      * }
      */
     public function __construct($url, array $options = [])
     {
         $this->uri = new Uri($url);
         $this->httpClient = !isset($options['httpClient']) ? new HttpClient() : $options['httpClient'];
+
         if (isset($options['httpOptions'])) $this->setHttpOptions($options['httpOptions']);
         if (isset($options['authProvider'])) $this->setAuthProvider($options['authProvider']);
         if (isset($options['defaultParams'])) $this->setDefaultParams($options['defaultParams']);
@@ -113,6 +113,7 @@ class Client
         $result = $response->getBody();
         $contentType = $response->getHeaderLine('Content-Type');
         if (strpos($contentType, 'application/json') !== false) $result = json_decode($result);
+
         $statusCode = $response->getStatusCode();
         if ($statusCode < 400) return $result;
 
@@ -229,10 +230,10 @@ class Client
     /**
      * Use given provider to add some authentication information to request
      *
-     * @param AuthProvider $authProvider
+     * @param AuthProviderInterface $authProvider
      * @return $this
      */
-    public function setAuthProvider(AuthProvider $authProvider)
+    public function setAuthProvider(AuthProviderInterface $authProvider)
     {
         $this->authProvider = $authProvider;
         return $this;

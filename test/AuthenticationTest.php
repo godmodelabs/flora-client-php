@@ -2,12 +2,8 @@
 
 namespace Flora\Client\Test;
 
+use Flora;
 use GuzzleHttp\Psr7\Response;
-
-/*use Flora\Auth\Provider as AuthProvider;
-use Flora\Auth\Strategy\BasicAuthentication as BasicAuthenticationStrategy;
-use Flora\Auth\Strategy\OAuth2 as OAuth2Strategy;
-use League\OAuth2\Client\Token\AccessToken;*/
 
 class AuthenticationTest extends FloraClientTest
 {
@@ -17,9 +13,13 @@ class AuthenticationTest extends FloraClientTest
         $this->mockHandler->append(new Response());
     }
 
+    /**
+     * @throws Flora\Exception
+     */
     public function testNoProviderConfiguredException()
     {
-        $this->setExpectedException('\\Flora\\Exception', 'Authentication provider is not configured');
+        $this->expectException(Flora\Exception::class);
+        $this->expectExceptionMessage('Authentication provider is not configured');
 
         $this->client->execute([
             'resource'      => 'user',
@@ -28,19 +28,22 @@ class AuthenticationTest extends FloraClientTest
         ]);
     }
 
-    /*public function testAuthenticationProviderInteraction()
+    /**
+     * @throws Flora\Exception
+     */
+    public function testAuthenticationProviderInteraction()
     {
-        $authProvider = new AuthProvider(new BasicAuthenticationStrategy('johndoe', 'secret'));
-        $this->client->setAuthProvider($authProvider);
-        $this->client->execute([
-            'resource'      => 'user',
-            'id'            => 1337,
-            'authenticate'  => true
-        ]);
+        $this->client
+            ->setAuthProvider(new BasicAuthentication('johndoe', 'secret'))
+            ->execute([
+                'resource'      => 'user',
+                'id'            => 1337,
+                'authenticate'  => true
+            ]);
 
         $request = $this->mockHandler->getLastRequest();
 
         $this->assertTrue($request->hasHeader('Authorization'), 'Authorization header not available');
         $this->assertEquals(['am9obmRvZTpzZWNyZXQ='], $request->getHeader('Authorization'));
-    }*/
+    }
 }
