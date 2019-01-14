@@ -93,11 +93,21 @@ class Client
         $httpMethod = $this->getHttpMethod($params);
         $request = new Request($httpMethod, $uri, ['Referer' => $this->getCurrentUri()]);
 
-        if (isset($params['authenticate'])) {
-            if ((bool) $params['authenticate']) {
-                if ($this->authProvider === null) throw new Exception('Authentication provider is not configured');
-                $request = $this->authProvider->authenticate($request);
+        $authorize = false;
+        foreach (['authenticate', 'authorize'] as $authParam) {
+            if (!isset($params[$authParam])) continue;
+            if (!(bool) $params[$authParam]) continue;
+
+            $authorize = true;
+            if ($authParam === 'authenticate') {
+                trigger_error('"authenticate" setting is deprecated - use "authorize" instead', \E_USER_DEPRECATED);
             }
+            break;
+        }
+
+        if ($authorize) {
+            if ($this->authProvider === null) throw new Exception('Authorization provider is not configured');
+            $request = $this->authProvider->authorize($request);
             unset($params['authenticate']);
         }
 
