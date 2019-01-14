@@ -100,6 +100,7 @@ class Client
             if (!(bool) $params[$authParam]) continue;
 
             $authorize = true;
+            unset($params[$authParam]);
             if ($authParam === 'authenticate') {
                 trigger_error('"authenticate" setting is deprecated - use "authorize" instead', \E_USER_DEPRECATED);
             }
@@ -109,7 +110,6 @@ class Client
         if ($authorize) {
             if ($this->authProvider === null) throw new Exception\ImplementationException('Authorization provider is not configured');
             $request = $this->authProvider->authorize($request);
-            unset($params['authenticate']);
         }
 
         if (!empty($this->defaultParams)) $params = array_merge($this->defaultParams, $params);

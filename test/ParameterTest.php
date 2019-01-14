@@ -114,9 +114,7 @@ class ParameterTest extends FloraClientTest
         $authProviderMock
             ->expects($this->once())
             ->method('authorize')
-            ->with($this->callback(function ($request) {
-                return $request instanceof RequestInterface;
-            }))
+            ->with($this->isInstanceOf(RequestInterface::class))
             ->willReturn(new Request('GET', 'http://api.example.com/'));
 
         $this->client
@@ -126,6 +124,9 @@ class ParameterTest extends FloraClientTest
                 'id'        => 1337,
                 'authorize' => true
             ]);
+
+        $querystring = $this->mockHandler->getLastRequest()->getUri()->getQuery();
+        $this->assertNotContains('authorize=', $querystring, 'authorize parameter must be removed from querystring');
     }
 
     public function testDefaultParameter()
