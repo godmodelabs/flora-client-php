@@ -5,7 +5,7 @@ namespace Flora\Client\Test;
 use Flora;
 use GuzzleHttp\Psr7\Response;
 
-class AuthenticationTest extends FloraClientTest
+class AuthorizationTest extends FloraClientTest
 {
     public function setUp()
     {
@@ -19,26 +19,26 @@ class AuthenticationTest extends FloraClientTest
     public function testNoProviderConfiguredException()
     {
         $this->expectException(Flora\Exception::class);
-        $this->expectExceptionMessage('Authentication provider is not configured');
+        $this->expectExceptionMessage('Authorization provider is not configured');
 
         $this->client->execute([
-            'resource'      => 'user',
-            'id'            => 1337,
-            'authenticate'  => true
+            'resource'  => 'user',
+            'id'        => 1337,
+            'authorize' => true
         ]);
     }
 
     /**
      * @throws Flora\Exception
      */
-    public function testAuthenticationProviderInteraction()
+    public function testAuthorizationProviderInteraction()
     {
         $this->client
             ->setAuthProvider(new BasicAuthentication('johndoe', 'secret'))
             ->execute([
-                'resource'      => 'user',
-                'id'            => 1337,
-                'authenticate'  => true
+                'resource'  => 'user',
+                'id'        => 1337,
+                'authorize' => true
             ]);
 
         $request = $this->mockHandler->getLastRequest();

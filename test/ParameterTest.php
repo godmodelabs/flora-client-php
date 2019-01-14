@@ -108,12 +108,12 @@ class ParameterTest extends FloraClientTest
         /** @var \PHPUnit_Framework_MockObject_MockObject|\Flora\AuthProviderInterface $authProviderMock */
         $authProviderMock = $this->getMockBuilder(AuthProviderInterface::class)
             ->disableOriginalConstructor()
-            ->setMethods(['authenticate'])
+            ->setMethods(['authorize'])
             ->getMock();
 
         $authProviderMock
             ->expects($this->once())
-            ->method('authenticate')
+            ->method('authorize')
             ->with($this->callback(function ($request) {
                 return $request instanceof RequestInterface;
             }))
@@ -122,9 +122,9 @@ class ParameterTest extends FloraClientTest
         $this->client
             ->setAuthProvider($authProviderMock)
             ->execute([
-                'resource'      => 'user',
-                'id'            => 1337,
-                'authenticate'  => true
+                'resource'  => 'user',
+                'id'        => 1337,
+                'authorize' => true
             ]);
     }
 
