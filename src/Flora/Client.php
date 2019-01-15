@@ -94,6 +94,9 @@ class Client
         $httpMethod = $this->getHttpMethod($params);
         $request = new Request($httpMethod, $uri, ['Referer' => $this->getCurrentUri()]);
 
+        if (!empty($this->defaultParams)) $params = array_merge($this->defaultParams, $params);
+        if (!empty($params)) $request = $this->applyParameters($request, $params, $this->forceGetParams);
+
         $authorize = false;
         foreach (['authenticate', 'authorize'] as $authParam) {
             if (!isset($params[$authParam])) continue;
@@ -111,9 +114,6 @@ class Client
             if ($this->authProvider === null) throw new Exception\ImplementationException('Authorization provider is not configured');
             $request = $this->authProvider->authorize($request);
         }
-
-        if (!empty($this->defaultParams)) $params = array_merge($this->defaultParams, $params);
-        if (!empty($params)) $request = $this->applyParameters($request, $params, $this->forceGetParams);
 
         try {
             $response = $this->httpClient->send($request, $this->httpOptions);
