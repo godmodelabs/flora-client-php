@@ -25,7 +25,7 @@ class AuthorizationTest extends FloraClientTest
         $this->client->execute([
             'resource'  => 'user',
             'id'        => 1337,
-            'authorize' => true
+            'auth'      => true
         ]);
     }
 
@@ -39,7 +39,7 @@ class AuthorizationTest extends FloraClientTest
             ->execute([
                 'resource'  => 'user',
                 'id'        => 1337,
-                'authorize' => true
+                'auth'      => true
             ]);
 
         $request = $this->mockHandler->getLastRequest();
@@ -78,7 +78,7 @@ class AuthorizationTest extends FloraClientTest
             ->execute([
                 'resource'  => 'user',
                 'id'        => 1337,
-                'authorize' => true
+                'auth'      => true
             ]);
 
         $querystring = $this->mockHandler->getLastRequest()->getUri()->getQuery();

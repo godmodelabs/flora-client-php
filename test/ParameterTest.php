@@ -122,11 +122,11 @@ class ParameterTest extends FloraClientTest
             ->execute([
                 'resource'  => 'user',
                 'id'        => 1337,
-                'authorize' => true
+                'auth'      => true
             ]);
 
         $querystring = $this->mockHandler->getLastRequest()->getUri()->getQuery();
-        $this->assertNotContains('authorize=', $querystring, 'authorize parameter must be removed from querystring');
+        $this->assertNotContains('auth=', $querystring, 'authorize parameter must be removed from querystring');
     }
 
     public function testDefaultParameter()

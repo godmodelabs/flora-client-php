@@ -97,20 +97,20 @@ class Client
         if (!empty($this->defaultParams)) $params = array_merge($this->defaultParams, $params);
         if (!empty($params)) $request = $this->applyParameters($request, $params, $this->forceGetParams);
 
-        $authorize = false;
-        foreach (['authenticate', 'authorize'] as $authParam) {
+        $auth = false;
+        foreach (['authenticate', 'auth'] as $authParam) {
             if (!isset($params[$authParam])) continue;
             if (!(bool) $params[$authParam]) continue;
 
-            $authorize = true;
+            $auth = true;
             unset($params[$authParam]);
             if ($authParam === 'authenticate') {
-                trigger_error('"authenticate" setting is deprecated - use "authorize" instead', \E_USER_DEPRECATED);
+                trigger_error('"authenticate" setting is deprecated - use "auth" instead', \E_USER_DEPRECATED);
             }
             break;
         }
 
-        if ($authorize) {
+        if ($auth) {
             if ($this->authProvider === null) throw new Exception\ImplementationException('Authorization provider is not configured');
             $request = $this->authProvider->authorize($request);
         }
