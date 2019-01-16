@@ -20,7 +20,7 @@ class AuthorizationTest extends FloraClientTest
     public function testNoProviderConfiguredException()
     {
         $this->expectException(Flora\Exception\ImplementationException::class);
-        $this->expectExceptionMessage('Authorization provider is not configured');
+        $this->expectExceptionMessage('Auth provider is not configured');
 
         $this->client->execute([
             'resource'  => 'user',
@@ -56,12 +56,12 @@ class AuthorizationTest extends FloraClientTest
         /** @var \PHPUnit_Framework_MockObject_MockObject|\Flora\AuthProviderInterface $authProviderMock */
         $authProviderMock = $this->getMockBuilder(Flora\AuthProviderInterface::class)
             ->disableOriginalConstructor()
-            ->setMethods(['authorize'])
+            ->setMethods(['auth'])
             ->getMock();
 
         $authProviderMock
             ->expects($this->once())
-            ->method('authorize')
+            ->method('auth')
             ->will($this->returnCallback(function (RequestInterface $request) {
                 $uri = $request->getUri();
 

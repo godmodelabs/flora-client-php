@@ -108,12 +108,12 @@ class ParameterTest extends FloraClientTest
         /** @var \PHPUnit_Framework_MockObject_MockObject|\Flora\AuthProviderInterface $authProviderMock */
         $authProviderMock = $this->getMockBuilder(AuthProviderInterface::class)
             ->disableOriginalConstructor()
-            ->setMethods(['authorize'])
+            ->setMethods(['auth'])
             ->getMock();
 
         $authProviderMock
             ->expects($this->once())
-            ->method('authorize')
+            ->method('auth')
             ->with($this->isInstanceOf(RequestInterface::class))
             ->willReturn(new Request('GET', 'http://api.example.com/'));
 
@@ -126,7 +126,7 @@ class ParameterTest extends FloraClientTest
             ]);
 
         $querystring = $this->mockHandler->getLastRequest()->getUri()->getQuery();
-        $this->assertNotContains('auth=', $querystring, 'authorize parameter must be removed from querystring');
+        $this->assertNotContains('auth=', $querystring, 'auth parameter must be removed from querystring');
     }
 
     public function testDefaultParameter()

@@ -111,8 +111,8 @@ class Client
         }
 
         if ($auth) {
-            if ($this->authProvider === null) throw new Exception\ImplementationException('Authorization provider is not configured');
-            $request = $this->authProvider->authorize($request);
+            if ($this->authProvider === null) throw new Exception\ImplementationException('Auth provider is not configured');
+            $request = $this->authProvider->auth($request);
         }
 
         try {

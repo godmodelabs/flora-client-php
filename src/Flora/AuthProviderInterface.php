@@ -10,5 +10,5 @@ interface AuthProviderInterface
      * @param RequestInterface $apiRequest
      * @return RequestInterface
      */
-    public function authorize(RequestInterface $apiRequest);
+    public function auth(RequestInterface $apiRequest);
 }
