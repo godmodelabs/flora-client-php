@@ -60,7 +60,7 @@ class Client
      *      @var int|string         $id             optional    Unique item identifier
      *      @var string             $format         optional    Output format (default json)
      *      @var string             $action         optional    API action (default: retrieve)
-     *      @var string             $select         optional    Retrieve only specified attributes
+     *      @var string|array       $select         optional    Retrieve only specified attributes
      *      @var string             $filter         optional    Filter items by criteria
      *      @var int                $limit          optional    Limit result set
      *      @var int                $page           optional    Paginate through result set
@@ -89,6 +89,7 @@ class Client
             unset($params['cache']);
         }
 
+        if (isset($params['select']) && is_array($params['select'])) $params['select'] = stringify_select($params['select']);
         if (isset($params['action']) && $params['action'] === 'retrieve') unset($params['action']);
 
         $httpMethod = $this->getHttpMethod($params);

@@ -17,6 +17,7 @@
         }
     ],
     "autoload":{
+        "files": ["src/functions.php"],
         "psr-4": {
             "Flora\\": "src/Flora/"
         }

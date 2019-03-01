@@ -33,6 +33,7 @@ class ParameterTest extends FloraClientTest
     {
         return [
             ['select', 'id,address.city,comments(order=ts:desc)[id,body]', 'id%2Caddress.city%2Ccomments%28order%3Dts%3Adesc%29%5Bid%2Cbody%5D'],
+            ['select', ['id', 'address' => ['city'], 'comments' => ['id', 'body']], 'id%2Caddress.city%2Ccomments%5Bid%2Cbody%5D'],
             ['filter', 'address[country.iso2=DE AND city=Munich]', 'address%5Bcountry.iso2%3DDE+AND+city%3DMunich%5D'],
             ['order', 'lastname:asc,firstname:desc', 'lastname%3Aasc%2Cfirstname%3Adesc'],
             ['limit', 15, 15],
