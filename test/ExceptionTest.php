@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Flora\Client\Test;
 
@@ -23,7 +23,7 @@ class ExceptionTest extends FloraClientTest
      * @param string $responseFile
      * @dataProvider exceptionDataProvider
      */
-    public function testRequestExceptions($exceptionClass, $message, $responseFile)
+    public function testRequestExceptions(string $exceptionClass, string $message, string $responseFile): void
     {
         $this->expectException($exceptionClass);
         $this->expectExceptionMessage($message);
@@ -34,7 +34,7 @@ class ExceptionTest extends FloraClientTest
         $this->client->execute(['resource' => 'user', 'id' => 1337]);
     }
 
-    public function testFallbackException()
+    public function testFallbackException(): void
     {
         $this->expectException(RuntimeException::class);
 
@@ -44,7 +44,7 @@ class ExceptionTest extends FloraClientTest
         $this->client->execute(['resource' => 'user', 'id' => 1337]);
     }
 
-    public function testHttpRuntimeExceptions()
+    public function testHttpRuntimeExceptions(): void
     {
         $this->expectException(TransferException::class);
 
@@ -58,7 +58,7 @@ class ExceptionTest extends FloraClientTest
         $this->client->execute(['resource' => 'user', 'id' => 1337]);
     }
 
-    public function testResourceParameterRequiredException()
+    public function testResourceParameterRequiredException(): void
     {
         $this->expectException(ImplementationException::class);
         $this->expectExceptionMessage('Resource must be set');
@@ -68,7 +68,7 @@ class ExceptionTest extends FloraClientTest
         $this->client->execute([]);
     }
 
-    public function exceptionDataProvider()
+    public function exceptionDataProvider(): array
     {
         return [
             [BadRequestException::class, 'Something went wrong', __DIR__ . '/_files/badrequest.json'],

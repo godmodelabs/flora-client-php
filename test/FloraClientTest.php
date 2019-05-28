@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Flora\Client\Test;
 
@@ -7,11 +7,13 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\Psr7\Stream;
+use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Base class for Flora client tests
  */
-abstract class FloraClientTest extends \PHPUnit_Framework_TestCase
+abstract class FloraClientTest extends TestCase
 {
     /**
      * @var FloraClient
@@ -23,7 +25,7 @@ abstract class FloraClientTest extends \PHPUnit_Framework_TestCase
      */
     protected $mockHandler;
 
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -34,18 +36,16 @@ abstract class FloraClientTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @param string $file
-     * @return \Psr\Http\Message\ResponseInterface
+     * @return ResponseInterface
      */
-    protected function getHttpResponseFromFile($file)
+    protected function getHttpResponseFromFile($file): ResponseInterface
     {
         $content = file_get_contents($file);
-        $data = json_decode($content);
+        $data = json_decode($content, false);
 
         $body = new Stream(fopen('php://memory', 'wb+'));
         $body->write($data->body);
 
-        $response = new Response($data->statusCode, (array) $data->headers, $body);
-
-        return $response;
+        return new Response($data->statusCode, (array) $data->headers, $body);
     }
 }

@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Flora\Client\Test;
 
@@ -7,13 +7,13 @@ use GuzzleHttp\Psr7\Response;
 
 class OptionTest extends FloraClientTest
 {
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
         $this->mockHandler->append(new Response());
     }
 
-    public function testDefaultHttpRequestTimeout()
+    public function testDefaultHttpRequestTimeout(): void
     {
         $this->client->execute(['resource' => 'user', 'id' => 1337]);
         /** @var array $options */
@@ -23,7 +23,7 @@ class OptionTest extends FloraClientTest
         $this->assertEquals(30, $options['timeout'], 'Default request timeout not set');
     }
 
-    public function testHttpRequestTimeoutOption()
+    public function testHttpRequestTimeoutOption(): void
     {
         $httpClient = new \GuzzleHttp\Client(['handler' => $this->mockHandler]);
         $client = new Client('http://api.example.com/', [

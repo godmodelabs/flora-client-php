@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Flora\Client\Test;
 
@@ -6,18 +6,18 @@ use GuzzleHttp\Psr7\Response;
 
 class RequestMethodTest extends FloraClientTest
 {
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
         $this->mockHandler->append(new Response());
     }
 
     /**
-     * @dataProvider defaultHttpMethodDataProvider
      * @param array $params
      * @param string $message
+     * @dataProvider defaultHttpMethodDataProvider
      */
-    public function testHttpGetMethod(array $params, $message)
+    public function testHttpGetMethod(array $params, string $message): void
     {
         $this->client->execute($params);
         $request = $this->mockHandler->getLastRequest();
@@ -25,7 +25,7 @@ class RequestMethodTest extends FloraClientTest
         $this->assertEquals('GET', $request->getMethod(), $message);
     }
 
-    public function testHttpPostMethodForNonRetrieveActions()
+    public function testHttpPostMethodForNonRetrieveActions(): void
     {
         $this->client->execute(['resource' => 'user', 'id' => 1337, 'action' => 'foobar']);
         $request = $this->mockHandler->getLastRequest();
@@ -34,7 +34,7 @@ class RequestMethodTest extends FloraClientTest
         $this->assertEquals('application/x-www-form-urlencoded', $request->getHeaderLine('Content-Type'));
     }
 
-    public function testHttpMethodParameterOverwrite()
+    public function testHttpMethodParameterOverwrite(): void
     {
         $this->client->execute(['resource' => 'user', 'id' => 1337, 'httpMethod' => 'POST']);
         $request = $this->mockHandler->getLastRequest();
@@ -42,7 +42,7 @@ class RequestMethodTest extends FloraClientTest
         $this->assertEquals('POST', $request->getMethod());
     }
 
-    public function testHttpPostMethodForLongQueryStrings()
+    public function testHttpPostMethodForLongQueryStrings(): void
     {
         $this->client->execute([
             'resource'  => 'article',
@@ -55,10 +55,10 @@ class RequestMethodTest extends FloraClientTest
         $request = $this->mockHandler->getLastRequest();
 
         $this->assertEquals('POST', $request->getMethod());
-        $this->assertContains('select=', (string) $request->getBody(), 'POST body doesn\'t contain parameters');
+        $this->assertStringContainsString('select=', (string) $request->getBody(), 'POST body doesn\'t contain parameters');
     }
 
-    public function testHttpPostMethodForJsonData()
+    public function testHttpPostMethodForJsonData(): void
     {
         $this->client->execute([
             'resource'  => 'article',
@@ -71,7 +71,7 @@ class RequestMethodTest extends FloraClientTest
         $this->assertEquals('action=create', $request->getUri()->getQuery());
     }
 
-    public function defaultHttpMethodDataProvider()
+    public function defaultHttpMethodDataProvider(): array
     {
         return [
             [['resource' => 'user', 'id' => 1337], 'Use GET method fallback if action parameter is empty'],

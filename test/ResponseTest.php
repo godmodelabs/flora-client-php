@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Flora\Client\Test;
 
@@ -8,7 +8,7 @@ use GuzzleHttp\Psr7\Stream;
 
 class ResponseTest extends FloraClientTest
 {
-    public function testJsonResponse()
+    public function testJsonResponse(): void
     {
         $expectedPayload = (object) [
             'meta'  => (object) [],
@@ -27,7 +27,7 @@ class ResponseTest extends FloraClientTest
         $this->assertEquals($expectedPayload, $response);
     }
 
-    public function testNonJsonResponse()
+    public function testNonJsonResponse(): void
     {
         $responseBody = new Stream(fopen('php://memory', 'wb+'));
         $responseBody->write('image-content');
@@ -39,7 +39,7 @@ class ResponseTest extends FloraClientTest
         $this->assertEquals('image-content', $response);
     }
 
-    public function testNonJsonErrorResponse()
+    public function testNonJsonErrorResponse(): void
     {
         $this->expectException(NotFoundException::class);
         $this->expectExceptionMessage('Not Found');

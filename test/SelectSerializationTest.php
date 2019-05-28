@@ -1,23 +1,24 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Flora\Client\Test;
 
 use function Flora\stringify_select;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 class SelectSerializationTest extends TestCase
 {
-    public function testSimpleArray()
+    public function testSimpleArray(): void
     {
         $this->assertEquals('id,name', stringify_select(['id', 'name']));
     }
 
-    public function testNestedArrays()
+    public function testNestedArrays(): void
     {
         $this->assertEquals('id,name,attr1,attr2', stringify_select(['id', 'name', ['attr1', 'attr2']]));
     }
 
-    public function testNestedArraysWithNonNumericKeys()
+    public function testNestedArraysWithNonNumericKeys(): void
     {
         $spec = [
             'id',
@@ -29,12 +30,12 @@ class SelectSerializationTest extends TestCase
         $this->assertEquals('id,name,subGroup[attr1,attr2],attr', stringify_select($spec));
     }
 
-    public function testNonNumericKeysWithNonArrayValues()
+    public function testNonNumericKeysWithNonArrayValues(): void
     {
         $this->assertEquals('subGroup.attr', stringify_select(['subGroup' => 'attr']));
     }
 
-    public function testNestedNonNumericArrays()
+    public function testNestedNonNumericArrays(): void
     {
         $spec = [
             'subGroup' => ['subSubGroup' => 'attr']
@@ -43,7 +44,7 @@ class SelectSerializationTest extends TestCase
         $this->assertEquals('subGroup.subSubGroup.attr', stringify_select($spec));
     }
 
-    public function testDeeplyNestedArrays()
+    public function testDeeplyNestedArrays(): void
     {
         $spec = [
             'id',
@@ -64,14 +65,14 @@ class SelectSerializationTest extends TestCase
         $this->assertEquals($selectString, stringify_select($spec));
     }
 
-    public function testSingleItemSubItemGroup()
+    public function testSingleItemSubItemGroup(): void
     {
         $this->assertEquals('group.attr', stringify_select(['group' => ['attr']]));
     }
 
-    public function testError()
+    public function testError(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Cannot handle given select specification. "1337" cannot be stringified');
 
         stringify_select([1337]);
