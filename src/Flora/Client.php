@@ -275,7 +275,7 @@ class Client
     }
 
     /**
-     * @param $statusCode
+     * @param int $statusCode
      * @param stdClass $error
      * @throws Exception\RuntimeException
      * @throws Exception\BadRequestException
@@ -285,7 +285,7 @@ class Client
      * @throws Exception\ServiceUnavailableException
      * @throws Exception\UnauthorizedException
      */
-    private function throwError($statusCode, stdClass $error): void
+    private function throwError(int $statusCode, stdClass $error): void
     {
         $message = $error->message;
 
