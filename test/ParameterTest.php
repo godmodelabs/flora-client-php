@@ -14,7 +14,7 @@ class ParameterTest extends FloraClientTest
     public function setUp(): void
     {
         parent::setUp();
-        $this->mockHandler->append(new Response());
+        $this->mockHandler->append(new Response(200, ['Content-Type' => 'application/json'], '{}'));
     }
 
     /**

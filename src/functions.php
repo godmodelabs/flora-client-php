@@ -1,16 +1,18 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Flora;
+
+use InvalidArgumentException;
 
 if (!function_exists('Flora\stringify_select')) {
     /**
      * @param array $spec
      * @return string
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     function stringify_select(array $spec)
     {
-        $items = array_map(function ($item, $key) {
+        $items = array_map(static function ($item, $key) {
             if (!is_numeric($key) && is_array($item)) {
                 $str = stringify_select($item);
                 return $key . (count($item) > 1 ? "[{$str}]" : ".{$str}");
@@ -20,7 +22,7 @@ if (!function_exists('Flora\stringify_select')) {
             if (is_string($item)) return $item;
             if (is_numeric($key) && is_array($item)) return stringify_select($item);
 
-            throw new \InvalidArgumentException(sprintf(
+            throw new InvalidArgumentException(sprintf(
                 'Cannot handle given select specification. "%s" cannot be stringified',
                 print_r($item, true)
             ));

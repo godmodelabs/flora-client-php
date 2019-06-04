@@ -45,6 +45,7 @@ abstract class FloraClientTest extends TestCase
 
         $body = new Stream(fopen('php://memory', 'wb+'));
         $body->write($data->body);
+        $body->rewind();
 
         return new Response($data->statusCode, (array) $data->headers, $body);
     }

@@ -1,7 +1,9 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Flora\Exception;
 
-class ImplementationException extends \LogicException implements ExceptionInterface
+use LogicException;
+
+class ImplementationException extends LogicException implements ExceptionInterface
 {
 }

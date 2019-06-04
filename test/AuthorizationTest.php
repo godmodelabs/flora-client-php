@@ -15,7 +15,7 @@ class AuthorizationTest extends FloraClientTest
     public function setUp(): void
     {
         parent::setUp();
-        $this->mockHandler->append(new Response());
+        $this->mockHandler->append(new Response(200, ['Content-Type' => 'application/json'], '{}'));
     }
 
     /**
@@ -70,7 +70,6 @@ class AuthorizationTest extends FloraClientTest
             ->willReturnCallback(static function (RequestInterface $request) {
                 $uri = $request->getUri();
 
-                $params = [];
                 parse_str($uri->getQuery(), $params);
                 $params['access_token'] = 'x.y.z';
 

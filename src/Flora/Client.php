@@ -1,12 +1,16 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Flora;
 
+use const E_USER_DEPRECATED;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Stream;
 use GuzzleHttp\Psr7\Uri;
 use GuzzleHttp\Client as HttpClient;
+use const PHP_SAPI;
 use Psr\Http\Message\RequestInterface;
+use stdClass;
 
 class Client
 {
@@ -56,7 +60,10 @@ class Client
 
     /**
      * @param array $params {
-     *      @var string             $resource Flora resource
+     * @return stdClass
+     * @throws Exception\ImplementationException
+     * @throws Exception\RuntimeException
+     * @var string             $resource Flora resource
      *      @var int|string         $id             optional    Unique item identifier
      *      @var string             $format         optional    Output format (default json)
      *      @var string             $action         optional    API action (default: retrieve)
@@ -67,14 +74,11 @@ class Client
      *      @var string             $search         optional    Search items by full-text search
      *      @var bool               $cache          optional    En-/disable caching (default: true)
      *      @var bool               $authenticate   optional    Use authentication provider to add some authentication information to request
-     *      @var string             $httpMethod     optional    Explicitly set/override HTTP (GET, POST,...) method
-     *      @var array|\stdClass    $data           optional    Send $data as JSON
+     *      @var string $httpMethod optional                    Explicitly set/override HTTP (GET, POST,...) method
+     *      @var array|stdClass     $data           optional    Send $data as JSON
      * }
-     * @return \stdClass
-     * @throws Exception\ImplementationException
-     * @throws Exception\RuntimeException
      */
-    public function execute(array $params)
+    public function execute(array $params): stdClass
     {
         if (!isset($params['resource']) || empty($params['resource'])) throw new Exception\ImplementationException('Resource must be set');
 
@@ -106,7 +110,7 @@ class Client
             $auth = true;
             unset($params[$authParam]);
             if ($authParam === 'authenticate') {
-                trigger_error('"authenticate" setting is deprecated - use "auth" instead', \E_USER_DEPRECATED);
+                trigger_error('"authenticate" setting is deprecated - use "auth" instead', E_USER_DEPRECATED);
             }
             break;
         }
@@ -118,28 +122,31 @@ class Client
 
         try {
             $response = $this->httpClient->send($request, $this->httpOptions);
-        } catch (\GuzzleHttp\Exception\GuzzleException $e) {
+        } catch (GuzzleException $e) {
             throw new Exception\TransferException($e->getMessage(), $e->getCode(), $e);
         }
 
-        $result = $response->getBody();
+        $result = $response->getBody()->getContents();
         $contentType = $response->getHeaderLine('Content-Type');
-        if (strpos($contentType, 'application/json') !== false) $result = json_decode($result);
+        if (strpos($contentType, 'application/json') !== false) $result = json_decode($result, false);
 
         $statusCode = $response->getStatusCode();
-        if ($statusCode < 400) return $result;
+        if ($statusCode >= 400) {
+            $this->throwError($statusCode,
+                (strpos($contentType, 'application/json') !== false)
+                    ? $result->error
+                    : (object) ['message' => $response->getReasonPhrase()]
+            );
+        }
 
-        $this->throwError($statusCode,
-            (strpos($contentType, 'application/json') !== false)
-                ? $result->error
-                : (object)['message' => $response->getReasonPhrase()]);
+        return $result;
     }
 
     /**
      * @param array $params
      * @return string
      */
-    private function getPath(array $params)
+    private function getPath(array $params): string
     {
         $path = '';
 
@@ -150,7 +157,7 @@ class Client
         return $path;
     }
 
-    private function getHttpMethod(array $params)
+    private function getHttpMethod(array $params): string
     {
         $httpMethod = 'GET';
 
@@ -167,9 +174,9 @@ class Client
      * @param RequestInterface $request
      * @param array $params
      * @param array $forceGetParams Optional Transfer parameters as part of url
-     * @return \Psr\Http\Message\RequestInterface
+     * @return RequestInterface
      */
-    private function applyParameters(RequestInterface $request, array $params, array $forceGetParams = [])
+    private function applyParameters(RequestInterface $request, array $params, array $forceGetParams = []): RequestInterface
     {
         if (empty($params)) return $request;
 
@@ -178,13 +185,13 @@ class Client
         return $this->handlePostRequest($request, $params, $forceGetParams);
     }
 
-    private function handleGetRequest(RequestInterface $request, array $params)
+    private function handleGetRequest(RequestInterface $request, array $params): RequestInterface
     {
         $uri = $request->getUri()->withQuery(http_build_query($params));
         return $request->withUri($uri);
     }
 
-    private function handlePostRequest(RequestInterface $request, array $params, array $forceGetParams = [])
+    private function handlePostRequest(RequestInterface $request, array $params, array $forceGetParams = []): RequestInterface
     {
         $isJsonRequest = array_key_exists('data', $params) && !empty($params['data']);
 
@@ -215,14 +222,14 @@ class Client
         return $request->withBody($body);
     }
 
-    private function getCurrentUri()
+    private function getCurrentUri(): string
     {
-        if (\PHP_SAPI === 'cli') $currentUri = 'file://';
+        if (PHP_SAPI === 'cli') $currentUri = 'file://';
         elseif (isset($_SERVER['HTTP_HOST'])) $currentUri = 'http://' . $_SERVER['HTTP_HOST'];
         else $currentUri = 'unknown://';
 
         if (isset($_SERVER['REQUEST_URI'])) $currentUri .= $_SERVER['REQUEST_URI'];
-        elseif (\PHP_SAPI === 'cli' && isset($_SERVER['argv'])) $currentUri .= implode(' ', $_SERVER['argv']);
+        elseif (PHP_SAPI === 'cli' && isset($_SERVER['argv'])) $currentUri .= implode(' ', $_SERVER['argv']);
         elseif (isset($_SERVER['SCRIPT_FILENAME'])) $currentUri .= $_SERVER['SCRIPT_FILENAME'];
 
         return $currentUri;
@@ -231,7 +238,7 @@ class Client
     /**
      * @param array $httpOptions
      */
-    private function setHttpOptions(array $httpOptions)
+    private function setHttpOptions(array $httpOptions): void
     {
         if (isset($httpOptions['timeout'])) {
             $timeout = (int) $httpOptions['timeout'];
@@ -245,19 +252,23 @@ class Client
      * @param AuthProviderInterface $authProvider
      * @return $this
      */
-    public function setAuthProvider(AuthProviderInterface $authProvider)
+    public function setAuthProvider(AuthProviderInterface $authProvider): self
     {
         $this->authProvider = $authProvider;
         return $this;
     }
 
-    public function setDefaultParams(array $params)
+    /**
+     * @param array $params
+     * @return $this
+     */
+    public function setDefaultParams(array $params): self
     {
         $this->defaultParams = $params;
         return $this;
     }
 
-    public function setForceGetParams(array $forceGetParams)
+    public function setForceGetParams(array $forceGetParams): self
     {
         if (count($forceGetParams)) $this->forceGetParams = array_merge($this->forceGetParams, $forceGetParams);
         return $this;
@@ -265,7 +276,7 @@ class Client
 
     /**
      * @param $statusCode
-     * @param \stdClass $error
+     * @param stdClass $error
      * @throws Exception\RuntimeException
      * @throws Exception\BadRequestException
      * @throws Exception\ForbiddenException
@@ -274,7 +285,7 @@ class Client
      * @throws Exception\ServiceUnavailableException
      * @throws Exception\UnauthorizedException
      */
-    private function throwError($statusCode, \stdClass $error)
+    private function throwError($statusCode, stdClass $error): void
     {
         $message = $error->message;
 

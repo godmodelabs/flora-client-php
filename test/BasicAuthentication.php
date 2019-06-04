@@ -30,7 +30,7 @@ class BasicAuthentication implements AuthProviderInterface
     /**
      * @inheritdoc
      */
-    public function auth(RequestInterface $request)
+    public function auth(RequestInterface $request): RequestInterface
     {
         return $request->withHeader('Authorization', base64_encode($this->username . ':' . $this->password));
     }

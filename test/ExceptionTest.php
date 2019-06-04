@@ -12,8 +12,7 @@ use Flora\Exception\ServiceUnavailableException;
 use Flora\Exception\TransferException;
 use Flora\Exception\UnauthorizedException;
 use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Psr7\Request;
-use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Psr7\{Request, Response};
 
 class ExceptionTest extends FloraClientTest
 {
