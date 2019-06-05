@@ -38,9 +38,9 @@ class Client
     /**
      * @param string $url URL of Flora instance
      * @param array $options {
-     *      @var HttpClient     $httpClient             optional    Http client instance handling API requests
+     *      @var HttpClient             $httpClient             optional    Http client instance handling API requests
      *      @var array $httpOptions optional {
-     *          @var int    $timeout    Request timeout
+     *          @var int                $timeout                            Request timeout
      *      }
      *      @var AuthProviderInterface  $authProvider           optional    Authorize requests with given provider
      *      @var array                  $defaultParams          optional    Automatically add params to each request
