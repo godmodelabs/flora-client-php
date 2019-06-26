@@ -2,14 +2,14 @@
 
 namespace Flora;
 
+use Closure;
 use const E_USER_DEPRECATED;
 use GuzzleHttp\Exception\GuzzleException;
-use GuzzleHttp\Psr7\Request;
-use GuzzleHttp\Psr7\Stream;
-use GuzzleHttp\Psr7\Uri;
+use GuzzleHttp\Promise\{Promise, PromiseInterface};
+use GuzzleHttp\Psr7\{Request, Stream, Uri};
 use GuzzleHttp\Client as HttpClient;
 use const PHP_SAPI;
-use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\{RequestInterface, ResponseInterface};
 use stdClass;
 
 class Client
@@ -60,10 +60,7 @@ class Client
 
     /**
      * @param array $params {
-     * @return stdClass
-     * @throws Exception\ImplementationException
-     * @throws Exception\RuntimeException
-     * @var string             $resource Flora resource
+     *      @var string             $resource                   Flora resource
      *      @var int|string         $id             optional    Unique item identifier
      *      @var string             $format         optional    Output format (default json)
      *      @var string             $action         optional    API action (default: retrieve)
@@ -73,34 +70,19 @@ class Client
      *      @var int                $page           optional    Paginate through result set
      *      @var string             $search         optional    Search items by full-text search
      *      @var bool               $cache          optional    En-/disable caching (default: true)
-     *      @var bool               $authenticate   optional    Use authentication provider to add some authentication information to request
-     *      @var string $httpMethod optional                    Explicitly set/override HTTP (GET, POST,...) method
+     *      @var bool               $auth           optional    Use authentication provider to add some authentication information to request
+     *      @var string             $httpMethod     optional    Explicitly set/override HTTP (GET, POST,...) method
      *      @var array|stdClass     $data           optional    Send $data as JSON
      * }
+     * @return stdClass
+     * @throws Exception\ImplementationException
+     * @throws Exception\RuntimeException
      */
     public function execute(array $params): stdClass
     {
         if (!isset($params['resource']) || empty($params['resource'])) throw new Exception\ImplementationException('Resource must be set');
 
-        $uri = $this->uri->withPath($this->getPath($params));
-
-        foreach (['resource', 'id', 'format'] as $param) { // remove path params from request params
-            if (isset($params[$param])) unset($params[$param]);
-        }
-
-        if (array_key_exists('cache', $params)) {
-            if ((bool) $params['cache'] === false) $params['_'] = time();
-            unset($params['cache']);
-        }
-
-        if (isset($params['select']) && is_array($params['select'])) $params['select'] = stringify_select($params['select']);
-        if (isset($params['action']) && $params['action'] === 'retrieve') unset($params['action']);
-
-        $httpMethod = $this->getHttpMethod($params);
-        $request = new Request($httpMethod, $uri, ['Referer' => $this->getCurrentUri()]);
-
-        if (!empty($this->defaultParams)) $params = array_merge($this->defaultParams, $params);
-        if (!empty($params)) $request = $this->applyParameters($request, $params, $this->forceGetParams);
+        $request = $this->prepareRequest($params);
 
         $auth = false;
         foreach (['authenticate', 'auth'] as $authParam) {
@@ -126,20 +108,79 @@ class Client
             throw new Exception\TransferException($e->getMessage(), $e->getCode(), $e);
         }
 
-        $result = $response->getBody()->getContents();
-        $contentType = $response->getHeaderLine('Content-Type');
-        if (strpos($contentType, 'application/json') !== false) $result = json_decode($result, false);
+        return self::handleResponse($response);
+    }
 
-        $statusCode = $response->getStatusCode();
-        if ($statusCode >= 400) {
-            $this->throwError($statusCode,
-                (strpos($contentType, 'application/json') !== false)
-                    ? $result->error
-                    : (object) ['message' => $response->getReasonPhrase()]
+    /**
+     * @param array $params
+     * @return PromiseInterface
+     */
+    public function executeAsync(array $params): PromiseInterface
+    {
+        if (!isset($params['resource']) || empty($params['resource'])) return self::reject('Resource must be set');
+
+        $request = $this->prepareRequest($params);
+
+        $auth = isset($params['auth']) && (bool) $params['auth'];
+        if ($auth) {
+            if ($this->authProvider === null) return self::reject('Auth provider is not configured');
+            $request = $this->authProvider->auth($request);
+        }
+
+        return $this->httpClient
+            ->sendAsync($request)
+            ->then(
+                Closure::fromCallable([__CLASS__, 'handleResponse']),
+                static function (GuzzleException $e) {
+                    return new Exception\TransferException($e->getMessage(), $e->getCode(), $e);
+                }
             );
+    }
+
+    private static function reject(string $reason): PromiseInterface
+    {
+        $promise = new Promise();
+        $promise->reject($reason);
+        return $promise;
+    }
+
+    private static function handleResponse(ResponseInterface $response): stdClass
+    {
+        $statusCode = $response->getStatusCode();
+        $result = json_decode($response->getBody()->getContents(), false);
+        $isJson = strpos($response->getHeaderLine('Content-Type'), 'application/json') !== false;
+
+        if ($statusCode >= 400) {
+            $error = $isJson ? $result->error : (object) ['message' => $response->getReasonPhrase()];
+            self::throwError($statusCode, $error);
         }
 
         return $result;
+    }
+
+    private function prepareRequest(array $params): RequestInterface
+    {
+        $uri = $this->uri->withPath($this->getPath($params));
+
+        foreach (['resource', 'id', 'format'] as $param) { // remove path params from request params
+            if (isset($params[$param])) unset($params[$param]);
+        }
+
+        if (array_key_exists('cache', $params)) {
+            if ((bool) $params['cache'] === false) $params['_'] = time();
+            unset($params['cache']);
+        }
+
+        if (isset($params['select']) && is_array($params['select'])) $params['select'] = stringify_select($params['select']);
+        if (isset($params['action']) && $params['action'] === 'retrieve') unset($params['action']);
+
+        $httpMethod = $this->getHttpMethod($params);
+        $request = new Request($httpMethod, $uri, ['Referer' => $this->getCurrentUri()]);
+
+        if (!empty($this->defaultParams)) $params = array_merge($this->defaultParams, $params);
+        if (!empty($params)) $request = $this->applyParameters($request, $params, $this->forceGetParams);
+
+        return $request;
     }
 
     /**
@@ -285,7 +326,7 @@ class Client
      * @throws Exception\ServiceUnavailableException
      * @throws Exception\UnauthorizedException
      */
-    private function throwError(int $statusCode, stdClass $error): void
+    private static function throwError(int $statusCode, stdClass $error): void
     {
         $message = $error->message;
 
