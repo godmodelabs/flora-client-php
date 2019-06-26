@@ -3,7 +3,6 @@
 namespace Flora;
 
 use Closure;
-use const E_USER_DEPRECATED;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Promise\{Promise, PromiseInterface};
 use GuzzleHttp\Psr7\{Request, Stream, Uri};
@@ -84,19 +83,7 @@ class Client
 
         $request = $this->prepareRequest($params);
 
-        $auth = false;
-        foreach (['authenticate', 'auth'] as $authParam) {
-            if (!isset($params[$authParam])) continue;
-            if (!(bool) $params[$authParam]) continue;
-
-            $auth = true;
-            unset($params[$authParam]);
-            if ($authParam === 'authenticate') {
-                trigger_error('"authenticate" setting is deprecated - use "auth" instead', E_USER_DEPRECATED);
-            }
-            break;
-        }
-
+        $auth = isset($params['auth']) && (bool) $params['auth'];
         if ($auth) {
             if ($this->authProvider === null) throw new Exception\ImplementationException('Auth provider is not configured');
             $request = $this->authProvider->auth($request);
