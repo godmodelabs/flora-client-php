@@ -5,17 +5,27 @@ namespace Flora\Client\Test;
 use Flora;
 use Flora\AuthProviderInterface;
 use Flora\Exception\ExceptionInterface;
-use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
-use ReflectionException;
 
-class AuthorizationTest extends FloraClientTest
+class AuthorizationTest extends TestCase
 {
+    /** @var TestClient */
+    private $client;
+
     public function setUp(): void
     {
         parent::setUp();
-        $this->mockHandler->append(new Response(200, ['Content-Type' => 'application/json'], '{}'));
+
+        $response = ResponseFactory::create()
+            ->withHeader('Content-Type', 'application/json')
+            ->withBody(StreamFactory::create('{}'));
+
+        $this->client = ClientFactory::create();
+        $this->client
+            ->getMockHandler()
+            ->append($response);
     }
 
     /**
@@ -46,7 +56,9 @@ class AuthorizationTest extends FloraClientTest
                 'auth'      => true
             ]);
 
-        $request = $this->mockHandler->getLastRequest();
+        $request = $this->client
+            ->getMockHandler()
+            ->getLastRequest();
 
         $this->assertTrue($request->hasHeader('Authorization'), 'Authorization header not available');
         $this->assertEquals(['am9obmRvZTpzZWNyZXQ='], $request->getHeader('Authorization'));
@@ -54,7 +66,6 @@ class AuthorizationTest extends FloraClientTest
 
     /**
      * @throws ExceptionInterface
-     * @throws ReflectionException
      */
     public function testAuthProviderRequestParameters(): void
     {
@@ -85,7 +96,12 @@ class AuthorizationTest extends FloraClientTest
                 'auth'      => true
             ]);
 
-        $querystring = $this->mockHandler->getLastRequest()->getUri()->getQuery();
+        $querystring = $this->client
+            ->getMockHandler()
+            ->getLastRequest()
+            ->getUri()
+            ->getQuery();
+
         $this->assertStringContainsString('client_id=test', $querystring);
         $this->assertStringContainsString('access_token=x.y.z', $querystring);
     }

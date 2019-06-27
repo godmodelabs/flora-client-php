@@ -4,14 +4,16 @@ namespace Flora\Client\Test;
 
 use Flora\Exception\NotFoundException;
 use GuzzleHttp\Promise\RejectionException;
-use GuzzleHttp\Psr7\Response;
+use PHPUnit\Framework\TestCase;
 
-class AsyncTest extends FloraClientTest
+class AsyncTest extends TestCase
 {
     public function testMethodExists(): void
     {
+        $client = ClientFactory::create();
+
         $this->assertTrue(
-            method_exists($this->client, 'executeAsync'),
+            method_exists($client, 'executeAsync'),
             'executeAsync method does not exists'
         );
     }
@@ -21,7 +23,7 @@ class AsyncTest extends FloraClientTest
         $this->expectException(RejectionException::class);
         $this->expectExceptionMessage('Resource must be set');
 
-        $this->client
+        ClientFactory::create()
             ->executeAsync([])
             ->wait();
     }
@@ -31,7 +33,7 @@ class AsyncTest extends FloraClientTest
         $this->expectException(RejectionException::class);
         $this->expectExceptionMessage('Auth provider is not configured');
 
-        $this->client
+        ClientFactory::create()
             ->executeAsync([
                 'resource' => 'article',
                 'auth' => true
@@ -41,11 +43,18 @@ class AsyncTest extends FloraClientTest
 
     public function testAsyncRequest(): void
     {
-        $expectedResponse = (object) ['meta' => (object) [], 'data' => [], 'cursor' => (object) []];
-        $body = json_encode($expectedResponse);
-        $this->mockHandler->append(new Response(200, ['Content-Type' => 'application/json'], $body));
+        $client = ClientFactory::create();
 
-        $response = $this->client
+        $expectedResponse = (object) ['meta' => (object) [], 'data' => [], 'cursor' => (object) []];
+        $response = ResponseFactory::create()
+            ->withHeader('Content-Type', 'application/json')
+            ->withBody(StreamFactory::create(json_encode($expectedResponse)));
+
+        $client
+            ->getMockHandler()
+            ->append($response);
+
+        $response = $client
             ->executeAsync(['resource' => 'article'])
             ->wait();
 
@@ -65,10 +74,17 @@ class AsyncTest extends FloraClientTest
             'cursor' => (object) [],
             'error' => (object) ['message' => $message]
         ];
-        $response = new Response(404, ['Content-Type' => 'application/json'], json_encode($expectedResponse));
-        $this->mockHandler->append($response);
 
-        $this->client
+        $response = ResponseFactory::create(404)
+            ->withHeader('Content-Type', 'application/json')
+            ->withBody(StreamFactory::create(json_encode($expectedResponse)));
+
+        $client = ClientFactory::create();
+        $client
+            ->getMockHandler()
+            ->append($response);
+
+        $client
             ->executeAsync(['resource' => 'article', 'id' => 1337])
             ->wait();
     }

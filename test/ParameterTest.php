@@ -2,19 +2,28 @@
 
 namespace Flora\Client\Test;
 
-use GuzzleHttp\Psr7\Request;
-use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 use Flora\AuthProviderInterface;
-use ReflectionException;
 
-class ParameterTest extends FloraClientTest
+class ParameterTest extends TestCase
 {
+    /** @var TestClient */
+    private $client;
+
     public function setUp(): void
     {
         parent::setUp();
-        $this->mockHandler->append(new Response(200, ['Content-Type' => 'application/json'], '{}'));
+
+        $this->client = ClientFactory::create();
+        $response = ResponseFactory::create()
+            ->withHeader('Content-Type', 'application/json')
+            ->withBody(StreamFactory::create('{}'));
+
+        $this->client
+            ->getMockHandler()
+            ->append($response);
     }
 
     /**
@@ -26,7 +35,9 @@ class ParameterTest extends FloraClientTest
     public function testRequestParameter($name, $value, $encoded): void
     {
         $this->client->execute(['resource' => 'user', $name => $value]);
-        $request = $this->mockHandler->getLastRequest();
+        $request = $this->client
+            ->getMockHandler()
+            ->getLastRequest();
 
         $this->assertEquals($name . '=' . $encoded, $request->getUri()->getQuery());
     }
@@ -47,7 +58,9 @@ class ParameterTest extends FloraClientTest
     public function testDefaultActionParameter(): void
     {
         $this->client->execute(['resource' => 'user', 'action' => 'retrieve']);
-        $request = $this->mockHandler->getLastRequest();
+        $request = $this->client
+            ->getMockHandler()
+            ->getLastRequest();
 
         $this->assertStringNotContainsString('action=', $request->getUri()->getQuery(), 'action=retrieve should not be transmitted');
     }
@@ -62,7 +75,9 @@ class ParameterTest extends FloraClientTest
                 'author'=> ['id'=> 1337]
             ]
         ]);
-        $request = $this->mockHandler->getLastRequest();
+        $request = $this->client
+            ->getMockHandler()
+            ->getLastRequest();
 
         $this->assertEquals(['application/json'], $request->getHeader('Content-Type'));
         $this->assertEquals('{"title":"Lorem Ipsum","author":{"id":1337}}', (string) $request->getBody());
@@ -75,7 +90,9 @@ class ParameterTest extends FloraClientTest
             'id'        => 1337,
             'format'    => 'image'
         ]);
-        $request = $this->mockHandler->getLastRequest();
+        $request = $this->client
+            ->getMockHandler()
+            ->getLastRequest();
 
         $this->assertEquals('/user/1337.image', $request->getUri()->getPath());
         $this->assertStringNotContainsString('format=', $request->getUri()->getQuery());
@@ -101,14 +118,13 @@ class ParameterTest extends FloraClientTest
             'filter'    => 'address.country.iso2=AT'
         ]);
 
-        $request = $this->mockHandler->getLastRequest();
+        $request = $this->client
+            ->getMockHandler()
+            ->getLastRequest();
 
         $this->assertEquals($expectedQueryString, $request->getUri()->getQuery());
     }
 
-    /**
-     * @throws ReflectionException
-     */
     public function testAuthorizeParameter(): void
     {
         /** @var MockObject|AuthProviderInterface $authProviderMock */
@@ -121,7 +137,7 @@ class ParameterTest extends FloraClientTest
             ->expects($this->once())
             ->method('auth')
             ->with($this->isInstanceOf(RequestInterface::class))
-            ->willReturn(new Request('GET', 'http://api.example.com/'));
+            ->willReturn(RequestFactory::create('GET', 'http://api.example.com/'));
 
         $this->client
             ->setAuthProvider($authProviderMock)
@@ -131,7 +147,12 @@ class ParameterTest extends FloraClientTest
                 'auth'      => true
             ]);
 
-        $querystring = $this->mockHandler->getLastRequest()->getUri()->getQuery();
+        $querystring = $this->client
+            ->getMockHandler()
+            ->getLastRequest()
+            ->getUri()
+            ->getQuery();
+
         $this->assertStringNotContainsString('auth=', $querystring, 'auth parameter must be removed from querystring');
     }
 
@@ -141,7 +162,9 @@ class ParameterTest extends FloraClientTest
             ->setDefaultParams(['portalId' => 1])
             ->execute(['resource' => 'user', 'id' => 1337]);
 
-        $request = $this->mockHandler->getLastRequest();
+        $request = $this->client
+            ->getMockHandler()
+            ->getLastRequest();
 
         $this->assertStringContainsString('portalId=1', $request->getUri()->getQuery());
     }
@@ -152,7 +175,9 @@ class ParameterTest extends FloraClientTest
             ->setDefaultParams(['portalId' => 1])
             ->execute(['resource' => 'user', 'id' => 1337, 'portalId' => 4711]);
 
-        $request = $this->mockHandler->getLastRequest();
+        $request = $this->client
+            ->getMockHandler()
+            ->getLastRequest();
 
         $this->assertStringContainsString('portalId=4711', $request->getUri()->getQuery());
     }
@@ -170,7 +195,10 @@ class ParameterTest extends FloraClientTest
                 $param => 'test'
             ]);
 
-        $request = $this->mockHandler->getLastRequest();
+        $request = $this->client
+            ->getMockHandler()
+            ->getLastRequest();
+
         $body = (string) $request->getBody();
 
         $this->assertStringContainsString("$param=test", $request->getUri()->getQuery());
@@ -189,7 +217,11 @@ class ParameterTest extends FloraClientTest
                 'foobar' => 1
             ]);
 
-        $this->assertStringContainsString('foobar=1', $this->mockHandler->getLastRequest()->getUri()->getQuery());
+        $request = $this->client
+            ->getMockHandler()
+            ->getLastRequest();
+
+        $this->assertStringContainsString('foobar=1', $request->getUri()->getQuery());
     }
 
     public function testJsonForceGetParameter(): void
@@ -199,10 +231,12 @@ class ParameterTest extends FloraClientTest
             ->setForceGetParams(['client_id'])
             ->execute(['resource' => 'article', 'data' => str_repeat('foo', 2048)]);
 
-        $request = $this->mockHandler->getLastRequest();
+        $request = $this->client
+            ->getMockHandler()
+            ->getLastRequest();
 
         $this->assertStringContainsString('client_id=1', $request->getUri()->getQuery());
-        $this->assertStringNotContainsString('client_id=1', (string) $request->getBody());
+        $this->assertStringNotContainsString('client_id=1', $request->getBody()->getContents());
     }
 
     public function forceGetParamProvider(): array

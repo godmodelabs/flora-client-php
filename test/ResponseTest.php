@@ -3,13 +3,21 @@
 namespace Flora\Client\Test;
 
 use Flora\Exception\NotFoundException;
-use GuzzleHttp\Psr7\Response;
-use GuzzleHttp\Psr7\Stream;
+use PHPUnit\Framework\TestCase;
 
-class ResponseTest extends FloraClientTest
+class ResponseTest extends TestCase
 {
     public function testJsonResponse(): void
     {
+        $client = ClientFactory::create();
+        $response = ResponseFactory::create()
+            ->withHeader('Content-Type', 'application/json')
+            ->withBody(StreamFactory::create('{"meta":{},"data":{"id":1337,"firstname":"John","lastname":"Doe"},"error":null,"cursor":null}'));
+
+        $client
+            ->getMockHandler()
+            ->append($response);
+
         $expectedPayload = (object) [
             'meta'  => (object) [],
             'data'  => (object) [
@@ -21,9 +29,7 @@ class ResponseTest extends FloraClientTest
             'cursor'=> null
         ];
 
-        $this->mockHandler->append($this->getHttpResponseFromFile(__DIR__ . '/_files/json.json'));
-        $response = $this->client->execute(['resource' => 'user', 'id' => 1337]);
-
+        $response = $client->execute(['resource' => 'user', 'id' => 1337]);
         $this->assertEquals($expectedPayload, $response);
     }
 
@@ -31,13 +37,16 @@ class ResponseTest extends FloraClientTest
     {
         $this->markTestSkipped('TypeError because "execute" method is defined to return stdClass object');
 
-        $responseBody = new Stream(fopen('php://memory', 'wb+'));
-        $responseBody->write('image-content');
-        $responseBody->rewind();
+        $client = ClientFactory::create();
+        $client
+            ->getMockHandler()
+            ->append(
+                ResponseFactory::create()
+                    ->withHeader('Content-Type', 'image/jpeg')
+                    ->withBody(StreamFactory::create('image-content'))
+            );
 
-        $this->mockHandler->append(new Response(200, ['Content-Type' => 'image/jpeg'], $responseBody));
-        $response = $this->client->execute(['resource' => 'user', 'id' => 1337, 'format' => 'image']);
-
+        $response = $client->execute(['resource' => 'user', 'id' => 1337, 'format' => 'image']);
         $this->assertEquals('image-content', $response);
     }
 
@@ -46,11 +55,15 @@ class ResponseTest extends FloraClientTest
         $this->expectException(NotFoundException::class);
         $this->expectExceptionMessage('Not Found');
 
-        $responseBody = new Stream(fopen('php://memory', 'wb+'));
-        $responseBody->write('image-content');
-        $response = new Response(404, ['Content-Type' => 'text/html'], $responseBody);
+        $client = ClientFactory::create();
+        $response = ResponseFactory::create(404)
+            ->withHeader('Content-Type', 'text/html')
+            ->withBody(StreamFactory::create('<html lang="de"><body></body></html>'));
 
-        $this->mockHandler->append($response);
-        $this->client->execute(['resource' => 'user', 'id' => 1337, 'format' => 'image']);
+        $client
+            ->getMockHandler()
+            ->append($response);
+
+        $client->execute(['resource' => 'user', 'id' => 1337, 'format' => 'image']);
     }
 }

@@ -12,49 +12,63 @@ use Flora\Exception\ServiceUnavailableException;
 use Flora\Exception\TransferException;
 use Flora\Exception\UnauthorizedException;
 use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Psr7\{Request, Response};
+use GuzzleHttp\Psr7\{Request};
+use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
 
-class ExceptionTest extends FloraClientTest
+class ExceptionTest extends TestCase
 {
     /**
      * @param string $exceptionClass
      * @param string $message
-     * @param string $responseFile
+     * @param ResponseInterface $response
      * @dataProvider exceptionDataProvider
      */
-    public function testRequestExceptions(string $exceptionClass, string $message, string $responseFile): void
+    public function testRequestExceptions(string $exceptionClass, string $message, ResponseInterface $response): void
     {
         $this->expectException($exceptionClass);
         $this->expectExceptionMessage($message);
 
-        $response = $this->getHttpResponseFromFile($responseFile);
-        $this->mockHandler->append($response);
+        $client = ClientFactory::create();
+        $client
+            ->getMockHandler()
+            ->append($response);
 
-        $this->client->execute(['resource' => 'user', 'id' => 1337]);
+        $client->execute(['resource' => 'user', 'id' => 1337]);
     }
 
     public function testFallbackException(): void
     {
         $this->expectException(RuntimeException::class);
 
-        $response = $this->getHttpResponseFromFile(__DIR__ . '/_files/unknown.json');
-        $this->mockHandler->append($response);
+        $body = '{"meta":{},"data":null,"error":{"message":"Fallback message"},"cursor":null}';
+        $response = ResponseFactory::create(418)
+            ->withHeader('Content-Type', 'application/json')
+            ->withBody(StreamFactory::create($body));
 
-        $this->client->execute(['resource' => 'user', 'id' => 1337]);
+        $client = ClientFactory::create();
+        $client
+            ->getMockHandler()
+            ->append($response);
+
+        $client->execute(['resource' => 'user', 'id' => 1337]);
     }
 
     public function testHttpRuntimeExceptions(): void
     {
         $this->expectException(TransferException::class);
 
-        $this->mockHandler->append(
-            new RequestException(
-            'Cannot connect to server',
-                new Request('GET', 'http://non-existent.api.localhost/user/id')
-            )
-        );
+        $client = ClientFactory::create();
+        $client
+            ->getMockHandler()
+            ->append(
+                new RequestException(
+                'Cannot connect to server',
+                    new Request('GET', 'http://non-existent.api.localhost/user/id')
+                )
+            );
 
-        $this->client->execute(['resource' => 'user', 'id' => 1337]);
+        $client->execute(['resource' => 'user', 'id' => 1337]);
     }
 
     public function testResourceParameterRequiredException(): void
@@ -62,20 +76,59 @@ class ExceptionTest extends FloraClientTest
         $this->expectException(ImplementationException::class);
         $this->expectExceptionMessage('Resource must be set');
 
-        $this->mockHandler->append(new Response());
+        $client = ClientFactory::create();
+        $client
+            ->getMockHandler()
+            ->append(ResponseFactory::create());
 
-        $this->client->execute([]);
+        $client->execute([]);
     }
 
     public function exceptionDataProvider(): array
     {
         return [
-            [BadRequestException::class, 'Something went wrong', __DIR__ . '/_files/badrequest.json'],
-            [UnauthorizedException::class, 'Authentication required', __DIR__ . '/_files/unauthorized.json'],
-            [ForbiddenException::class, 'You\'re not allowed to access this item', __DIR__ . '/_files/forbidden.json'],
-            [NotFoundException::class, 'Item not found', __DIR__ . '/_files/notfound.json'],
-            [ServerException::class, 'Something bad happened', __DIR__ . '/_files/server.json'],
-            [ServiceUnavailableException::class, 'Please try again later', __DIR__ . '/_files/serviceunavailable.json']
+            [
+                BadRequestException::class,
+                'Something went wrong',
+                ResponseFactory::create(400)
+                    ->withHeader('Content-Type', 'application/json')
+                    ->withBody(StreamFactory::create('{"meta":{},"data":null,"error":{"message":"Something went wrong"},"cursor":null}'))
+            ],
+            [
+                UnauthorizedException::class,
+                'Authentication required',
+                ResponseFactory::create(401)
+                    ->withHeader('Content-Type', 'application/json')
+                    ->withBody(StreamFactory::create('{"meta":{},"data":null,"error":{"message":"Authentication required"},"cursor":null}'))
+            ],
+            [
+                ForbiddenException::class,
+                'You\'re not allowed to access this item',
+                ResponseFactory::create(403)
+                    ->withHeader('Content-Type', 'application/json')
+                    ->withBody(StreamFactory::create('{"meta":{},"data":null,"error":{"message":"You\'re not allowed to access this item"},"cursor":null}'))
+            ],
+            [
+                NotFoundException::class,
+                'Item not found',
+                ResponseFactory::create(404)
+                    ->withHeader('Content-Type', 'application/json')
+                    ->withBody(StreamFactory::create('{"meta":{},"data":null,"error":{"message":"Item not found"},"cursor":null}'))
+            ],
+            [
+                ServerException::class,
+                'Something bad happened',
+                ResponseFactory::create(500)
+                    ->withHeader('Content-Type', 'application/json')
+                    ->withBody(StreamFactory::create('{"meta":{},"data":null,"error":{"message":"Something bad happened"},"cursor":null}'))
+            ],
+            [
+                ServiceUnavailableException::class,
+                'Please try again later',
+                ResponseFactory::create(503)
+                    ->withHeader('Content-Type', 'application/json')
+                    ->withBody(StreamFactory::create('{"meta":{},"data":null,"error":{"message":"Please try again later"},"cursor":null}'))
+            ]
         ];
     }
 }

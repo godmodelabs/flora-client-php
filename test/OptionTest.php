@@ -2,22 +2,25 @@
 
 namespace Flora\Client\Test;
 
-use Flora\Client;
-use GuzzleHttp\Psr7\Response;
+use PHPUnit\Framework\TestCase;
 
-class OptionTest extends FloraClientTest
+class OptionTest extends TestCase
 {
-    public function setUp(): void
-    {
-        parent::setUp();
-        $this->mockHandler->append(new Response(200, ['Content-Type' => 'application/json'], '{}'));
-    }
-
     public function testDefaultHttpRequestTimeout(): void
     {
-        $this->client->execute(['resource' => 'user', 'id' => 1337]);
-        /** @var array $options */
-        $options = $this->mockHandler->getLastOptions();
+        $client = ClientFactory::create();
+        $response = ResponseFactory::create(200)
+            ->withHeader('Content-Type', 'application/json')
+            ->withBody(StreamFactory::create('{}'));
+
+        $client
+            ->getMockHandler()
+            ->append($response);
+
+        $client->execute(['resource' => 'user', 'id' => 1337]);
+        $options = $client
+            ->getMockHandler()
+            ->getLastOptions();
 
         $this->assertArrayHasKey('timeout', $options);
         $this->assertEquals(30, $options['timeout'], 'Default request timeout not set');
@@ -25,16 +28,17 @@ class OptionTest extends FloraClientTest
 
     public function testHttpRequestTimeoutOption(): void
     {
-        $httpClient = new \GuzzleHttp\Client(['handler' => $this->mockHandler]);
-        $client = new Client('http://api.example.com/', [
-            'httpClient' => $httpClient,
-            'httpOptions'=> ['timeout' => 5]
-        ]);
+        $client = ClientFactory::create(['httpOptions'=> ['timeout' => 5]]);
+        $mockHandler = $client->getMockHandler();
+        $response = ResponseFactory::create(200)
+            ->withHeader('Content-Type', 'application/json')
+            ->withBody(StreamFactory::create('{}'));
+
+        $mockHandler->append($response);
 
         $client->execute(['resource' => 'user', 'id' => 1337]);
-        /** @var array $options */
-        $options = $this->mockHandler->getLastOptions();
 
+        $options = $mockHandler->getLastOptions();
         $this->assertEquals(5, $options['timeout'], 'Request timeout not set correctly');
     }
 }

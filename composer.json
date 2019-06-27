@@ -37,6 +37,7 @@
         "guzzlehttp/guzzle": "~6.2"
     },
     "require-dev": {
+        "http-interop/http-factory-guzzle": "^1.0",
         "phpunit/phpunit": "^8.1"
     }
 }

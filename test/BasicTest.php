@@ -2,20 +2,33 @@
 
 namespace Flora\Client\Test;
 
-use GuzzleHttp\Psr7\Response;
+use PHPUnit\Framework\TestCase;
 
-class BasicTest extends FloraClientTest
+class BasicTest extends TestCase
 {
+    /** @var TestClient */
+    private $client;
+
     public function setUp(): void
     {
         parent::setUp();
-        $this->mockHandler->append(new Response(200, ['Content-Type' => 'application/json'], '{}'));
+
+        $response = ResponseFactory::create()
+            ->withHeader('Content-Type', 'application/json')
+            ->withBody(StreamFactory::create('{}'));
+
+        $this->client = ClientFactory::create();
+        $this->client
+            ->getMockHandler()
+            ->append($response);
     }
 
     public function testApiHost(): void
     {
         $this->client->execute(['resource' => 'user']);
-        $request = $this->mockHandler->getLastRequest();
+        $request = $this->client
+            ->getMockHandler()
+            ->getLastRequest();
 
         $this->assertEquals(['api.example.com'], $request->getHeader('Host'));
     }
@@ -23,7 +36,10 @@ class BasicTest extends FloraClientTest
     public function testResourceInUrl(): void
     {
         $this->client->execute(['resource' => 'user']);
-        $uri = $this->mockHandler->getLastRequest()->getUri();
+        $uri = $this->client
+            ->getMockHandler()
+            ->getLastRequest()
+            ->getUri();
 
         $this->assertEquals('/user/', $uri->getPath());
         $this->assertStringNotContainsString('resource=', $uri->getQuery());
@@ -32,7 +48,10 @@ class BasicTest extends FloraClientTest
     public function testIdInUrl(): void
     {
         $this->client->execute(['resource' => 'user', 'id' => 1337]);
-        $uri = $this->mockHandler->getLastRequest()->getUri();
+        $uri = $this->client
+            ->getMockHandler()
+            ->getLastRequest()
+            ->getUri();
 
         $this->assertStringStartsWith('/user/1337', $uri->getPath());
         $this->assertStringNotContainsString('id=', $uri->getQuery());
@@ -41,7 +60,9 @@ class BasicTest extends FloraClientTest
     public function testReferer(): void
     {
         $this->client->execute(['resource' => 'user']);
-        $request = $this->mockHandler->getLastRequest();
+        $request = $this->client
+            ->getMockHandler()
+            ->getLastRequest();
 
         $this->assertArrayHasKey('Referer', $request->getHeaders(), 'Referer not set');
         $this->assertStringStartsWith('file://', $request->getHeaderLine('Referer'));
@@ -51,7 +72,11 @@ class BasicTest extends FloraClientTest
     public function testCacheBuster(): void
     {
         $this->client->execute(['resource' => 'user', 'cache' => false]);
-        $queryString = $this->mockHandler->getLastRequest()->getUri()->getQuery();
+        $queryString = $this->client
+            ->getMockHandler()
+            ->getLastRequest()
+            ->getUri()
+            ->getQuery();
 
         $this->assertStringNotContainsString('cache', $queryString);
         $this->assertStringContainsString('_=', $queryString);
