@@ -1,5 +1,4 @@
-Flora PHP client
-================
+# Flora PHP client
 
 [![Build Status](https://travis-ci.org/godmodelabs/flora-client-php.svg?branch=master)](https://travis-ci.org/godmodelabs/flora-client-php)
 
@@ -13,22 +12,39 @@ $response = $client->execute([
 ]);
 ```
 
-The client also supports asynchronous requests:
+## Asynchronous requests (using `guzzlehttp/promises`)
 
 ```php
 use function GuzzleHttp\Promise\unwrap;
 
 $client = new \Flora\Client('http://api.example.com/');
 try {
-    [$fooResponse, $barResponse] = unwrap([
-        $client->executeAsync([
-            'resource' => 'foo',
-            'select' => 'id,name'
-        ]),
-        $client->executeAsync([
-            'resource' => 'bar',
-            'select' => 'id,name'
-        ])
+    $fooPromise = $client->executeAsync([
+        'resource' => 'foo',
+        'select' => 'id,name'
+    ]);
+    $barPromise = $client->executeAsync([
+        'resource' => 'bar',
+        'select' => 'id,name'
+    ]);
+    
+    [$fooResponse, $barResponse] = unwrap([$fooPromise, $barPromise]);
+    // process responses...
+} catch (Throwable $e) {
+    echo $e->getMessage(), PHP_EOL;
+}
+```
+
+## Parallel requests
+
+Simple interface for simultaneously executing multiple API requests. Basically hides complexity from example above. 
+
+```php
+$client = new \Flora\Client('http://api.example.com/');
+try {
+    [$fooResponse, $barResponse] = $client->executeParallel([
+        ['resource' => 'foo', 'select' => 'id,name'],
+        ['resource' => 'bar', 'select' => 'id,name']
     ]);
     // process responses...
 } catch (Throwable $e) {
