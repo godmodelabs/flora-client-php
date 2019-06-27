@@ -50,7 +50,9 @@ class Client
     public function __construct($url, array $options = [])
     {
         $this->uri = new Uri($url);
-        $this->httpClient = !isset($options['httpClient']) ? new HttpClient() : $options['httpClient'];
+        $this->httpClient = isset($options['httpClient']) && $options['httpClient'] instanceof HttpClient
+            ? $options['httpClient']
+            : new HttpClient();
 
         if (isset($options['httpOptions'])) $this->setHttpOptions($options['httpOptions']);
 
