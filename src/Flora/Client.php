@@ -39,39 +39,39 @@ class Client
 
     /**
      * @param string $url URL of Flora instance
-     * @param array $options {
+     * @param array $opts {
      *      @var HttpClient             $httpClient             optional    Http client instance handling API requests
      *      @var array $httpOptions optional {
      *          @var int                $timeout                            Request timeout
      *      }
      *      @var AuthProviderInterface  $authProvider           optional    Authorize requests with given provider
-     *      @var array                  $defaultParams          optional    Automatically add params to each request
-     *      @var array                  $forceGetParams         optional    Params always send as part of the url
+     *      @var string[]               $defaultParams          optional    Automatically add params to each request
+     *      @var string[]               $forceGetParams         optional    Params always send as part of the url
      * }
      */
-    public function __construct($url, array $options = [])
+    public function __construct($url, array $opts = [])
     {
         $this->uri = new Uri($url);
-        $this->httpClient = isset($options['httpClient']) && $options['httpClient'] instanceof HttpClient
-            ? $options['httpClient']
+        $this->httpClient = isset($opts['httpClient']) && $opts['httpClient'] instanceof HttpClient
+            ? $opts['httpClient']
             : new HttpClient();
 
-        if (isset($options['httpOptions'])) $this->setHttpOptions($options['httpOptions']);
+        if (isset($opts['httpOptions'])) $this->setHttpOptions($opts['httpOptions']);
 
-        if (isset($options['authProvider'])) {
-            if (!($options['authProvider'] instanceof AuthProviderInterface)) {
+        if (isset($opts['authProvider'])) {
+            if (!($opts['authProvider'] instanceof AuthProviderInterface)) {
                 throw new ImplementationException('authProvider must be in instance of AuthProviderInterface');
             }
-            $this->authProvider = $options['authProvider'];
+            $this->authProvider = $opts['authProvider'];
         }
 
-        if (isset($options['defaultParams']) && is_array($options['defaultParams']) && count($options['defaultParams'])) {
-            $this->defaultParams = $options['defaultParams'];
+        if (isset($opts['defaultParams']) && is_array($opts['defaultParams']) && count($opts['defaultParams']) > 0) {
+            $this->defaultParams = $opts['defaultParams'];
         }
 
         $this->forceGetParams = ['client_id', 'action', 'access_token'];
-        if (isset($options['forceGetParams']) && is_array($options['forceGetParams']) && count($options['forceGetParams'])) {
-            $this->forceGetParams = array_merge($this->forceGetParams, $options['forceGetParams']);
+        if (isset($opts['forceGetParams']) && is_array($opts['forceGetParams']) && count($opts['forceGetParams']) > 0) {
+            $this->forceGetParams = array_merge($this->forceGetParams, $opts['forceGetParams']);
         }
     }
 

@@ -10,10 +10,10 @@ class TestClient extends FloraClient
     /** @var MockHandler */
     private $mockHandler;
 
-    public function __construct($url, array $options = [])
+    public function __construct($url, array $opts = [])
     {
-        parent::__construct($url, $options);
-        $this->mockHandler = $options['mockHandler'];
+        parent::__construct($url, $opts);
+        $this->mockHandler = $opts['mockHandler'];
     }
 
     public function getMockHandler(): MockHandler
