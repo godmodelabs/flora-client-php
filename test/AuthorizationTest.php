@@ -8,24 +8,20 @@ use Flora\Exception\ExceptionInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
 class AuthorizationTest extends TestCase
 {
-    /** @var TestClient */
-    private $client;
+    /** @var ResponseInterface */
+    private $response;
 
     public function setUp(): void
     {
         parent::setUp();
 
-        $response = ResponseFactory::create()
+        $this->response = ResponseFactory::create()
             ->withHeader('Content-Type', 'application/json')
             ->withBody(StreamFactory::create('{}'));
-
-        $this->client = ClientFactory::create();
-        $this->client
-            ->getMockHandler()
-            ->append($response);
     }
 
     /**
@@ -36,11 +32,12 @@ class AuthorizationTest extends TestCase
         $this->expectException(Flora\Exception\ImplementationException::class);
         $this->expectExceptionMessage('Auth provider is not configured');
 
-        $this->client->execute([
-            'resource'  => 'user',
-            'id'        => 1337,
-            'auth'      => true
-        ]);
+        ClientFactory::create()
+            ->execute([
+                'resource'  => 'user',
+                'id'        => 1337,
+                'auth'      => true
+            ]);
     }
 
     /**
@@ -48,15 +45,18 @@ class AuthorizationTest extends TestCase
      */
     public function testAuthorizationProviderInteraction(): void
     {
-        $this->client
-            ->setAuthProvider(new BasicAuthentication('johndoe', 'secret'))
-            ->execute([
-                'resource'  => 'user',
-                'id'        => 1337,
-                'auth'      => true
-            ]);
+        $client = ClientFactory::create(['authProvider' => new BasicAuthentication('johndoe', 'secret')]);
+        $client
+            ->getMockHandler()
+            ->append($this->response);
 
-        $request = $this->client
+        $client->execute([
+            'resource'  => 'user',
+            'id'        => 1337,
+            'auth'      => true
+        ]);
+
+        $request = $client
             ->getMockHandler()
             ->getLastRequest();
 
@@ -87,16 +87,22 @@ class AuthorizationTest extends TestCase
                 return $request->withUri($uri->withQuery(http_build_query($params)));
             });
 
-        $this->client
-            ->setDefaultParams(['client_id' => 'test'])
-            ->setAuthProvider($authProviderMock)
-            ->execute([
-                'resource'  => 'user',
-                'id'        => 1337,
-                'auth'      => true
-            ]);
+        $client = ClientFactory::create([
+            'defaultParams' => ['client_id' => 'test'],
+            'authProvider' => $authProviderMock
+        ]);
 
-        $querystring = $this->client
+        $client
+            ->getMockHandler()
+            ->append($this->response);
+
+        $client->execute([
+            'resource'  => 'user',
+            'id'        => 1337,
+            'auth'      => true
+        ]);
+
+        $querystring = $client
             ->getMockHandler()
             ->getLastRequest()
             ->getUri()

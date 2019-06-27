@@ -3,6 +3,7 @@
 namespace Flora;
 
 use Closure;
+use Flora\Exception\ImplementationException;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Promise\{Promise, PromiseInterface};
 use GuzzleHttp\Psr7\{Request, Stream, Uri};
@@ -32,7 +33,7 @@ class Client
     private $defaultParams = [];
 
     /** @var array */
-    private $forceGetParams = ['client_id', 'action', 'access_token'];
+    private $forceGetParams;
 
     /**
      * @param string $url URL of Flora instance
@@ -52,9 +53,22 @@ class Client
         $this->httpClient = !isset($options['httpClient']) ? new HttpClient() : $options['httpClient'];
 
         if (isset($options['httpOptions'])) $this->setHttpOptions($options['httpOptions']);
-        if (isset($options['authProvider'])) $this->setAuthProvider($options['authProvider']);
-        if (isset($options['defaultParams'])) $this->setDefaultParams($options['defaultParams']);
-        if (isset($options['forceGetParams'])) $this->setForceGetParams($options['forceGetParams']);
+
+        if (isset($options['authProvider'])) {
+            if (!($options['authProvider'] instanceof AuthProviderInterface)) {
+                throw new ImplementationException('authProvider must be in instance of AuthProviderInterface');
+            }
+            $this->authProvider = $options['authProvider'];
+        }
+
+        if (isset($options['defaultParams']) && is_array($options['defaultParams']) && count($options['defaultParams'])) {
+            $this->defaultParams = $options['defaultParams'];
+        }
+
+        $this->forceGetParams = ['client_id', 'action', 'access_token'];
+        if (isset($options['forceGetParams']) && is_array($options['forceGetParams']) && count($options['forceGetParams'])) {
+            $this->forceGetParams = array_merge($this->forceGetParams, $options['forceGetParams']);
+        }
     }
 
     /**
@@ -272,34 +286,6 @@ class Client
             $timeout = (int) $httpOptions['timeout'];
             $this->httpOptions['timeout'] = $timeout;
         }
-    }
-
-    /**
-     * Use given provider to add some authentication information to request
-     *
-     * @param AuthProviderInterface $authProvider
-     * @return $this
-     */
-    public function setAuthProvider(AuthProviderInterface $authProvider): self
-    {
-        $this->authProvider = $authProvider;
-        return $this;
-    }
-
-    /**
-     * @param array $params
-     * @return $this
-     */
-    public function setDefaultParams(array $params): self
-    {
-        $this->defaultParams = $params;
-        return $this;
-    }
-
-    public function setForceGetParams(array $forceGetParams): self
-    {
-        if (count($forceGetParams)) $this->forceGetParams = array_merge($this->forceGetParams, $forceGetParams);
-        return $this;
     }
 
     /**
