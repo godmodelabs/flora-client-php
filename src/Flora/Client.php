@@ -6,11 +6,13 @@ use Closure;
 use Flora\Exception\ImplementationException;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Promise\{Promise, PromiseInterface};
+use function GuzzleHttp\Promise\unwrap;
 use GuzzleHttp\Psr7\{Request, Stream, Uri};
 use GuzzleHttp\Client as HttpClient;
 use const PHP_SAPI;
 use Psr\Http\Message\{RequestInterface, ResponseInterface};
 use stdClass;
+use Throwable;
 
 class Client
 {
@@ -93,7 +95,7 @@ class Client
      * @throws Exception\ImplementationException
      * @throws Exception\RuntimeException
      */
-    public function execute(array $params): stdClass
+    public function execute(array $params): object
     {
         if (!isset($params['resource']) || empty($params['resource'])) throw new Exception\ImplementationException('Resource must be set');
 
@@ -138,6 +140,17 @@ class Client
                     return new Exception\TransferException($e->getMessage(), $e->getCode(), $e);
                 }
             );
+    }
+
+    /**
+     * @param array<array> $params
+     * @return array<int, object>
+     * @throws Throwable
+     */
+    public function executeParallel(array $params): array
+    {
+        $promises = array_map([$this, 'executeAsync'], $params);
+        return unwrap($promises);
     }
 
     private static function reject(string $reason): PromiseInterface
