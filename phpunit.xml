@@ -10,7 +10,7 @@
 
     <testsuites>
         <testsuite name="Flora client">
-            <directory>test</directory>
+            <directory>tests</directory>
         </testsuite>
     </testsuites>
 

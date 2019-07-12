@@ -27,7 +27,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Flora\\Client\\Test\\": "test/"
+            "Flora\\Client\\Test\\": "tests/"
         }
     },
     "prefer-stable": true,
