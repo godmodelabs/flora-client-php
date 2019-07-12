@@ -2,44 +2,32 @@
 
 namespace Flora\Client\Test;
 
+use Flora\ApiRequestFactory;
+use GuzzleHttp\Psr7\Uri;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\UriInterface;
 
 class BasicTest extends TestCase
 {
-    /** @var TestClient */
-    private $client;
+    /** @var UriInterface */
+    private $uri;
 
     public function setUp(): void
     {
         parent::setUp();
-
-        $response = ResponseFactory::create()
-            ->withHeader('Content-Type', 'application/json')
-            ->withBody(StreamFactory::create('{}'));
-
-        $this->client = ClientFactory::create();
-        $this->client
-            ->getMockHandler()
-            ->append($response);
+        $this->uri = new Uri('http://api.example.com');
     }
 
     public function testApiHost(): void
     {
-        $this->client->execute(['resource' => 'user']);
-        $request = $this->client
-            ->getMockHandler()
-            ->getLastRequest();
-
+        $request = (new ApiRequestFactory($this->uri))->create(['resource' => 'user']);
         $this->assertEquals(['api.example.com'], $request->getHeader('Host'));
     }
 
     public function testResourceInUrl(): void
     {
-        $this->client->execute(['resource' => 'user']);
-        $uri = $this->client
-            ->getMockHandler()
-            ->getLastRequest()
-            ->getUri();
+        $request = (new ApiRequestFactory($this->uri))->create(['resource' => 'user']);
+        $uri = $request->getUri();
 
         $this->assertEquals('/user/', $uri->getPath());
         $this->assertStringNotContainsString('resource=', $uri->getQuery());
@@ -47,11 +35,8 @@ class BasicTest extends TestCase
 
     public function testIdInUrl(): void
     {
-        $this->client->execute(['resource' => 'user', 'id' => 1337]);
-        $uri = $this->client
-            ->getMockHandler()
-            ->getLastRequest()
-            ->getUri();
+        $request = (new ApiRequestFactory($this->uri))->create(['resource' => 'user', 'id' => 1337]);
+        $uri = $request->getUri();
 
         $this->assertStringStartsWith('/user/1337', $uri->getPath());
         $this->assertStringNotContainsString('id=', $uri->getQuery());
@@ -59,8 +44,17 @@ class BasicTest extends TestCase
 
     public function testReferer(): void
     {
-        $this->client->execute(['resource' => 'user']);
-        $request = $this->client
+        $response = ResponseFactory::create()
+            ->withHeader('Content-Type', 'application/json')
+            ->withBody(StreamFactory::create('{}'));
+
+        $client = ClientFactory::create();
+        $client
+            ->getMockHandler()
+            ->append($response);
+
+        $client->execute(['resource' => 'user']);
+        $request = $client
             ->getMockHandler()
             ->getLastRequest();
 
@@ -71,10 +65,8 @@ class BasicTest extends TestCase
 
     public function testCacheBuster(): void
     {
-        $this->client->execute(['resource' => 'user', 'cache' => false]);
-        $queryString = $this->client
-            ->getMockHandler()
-            ->getLastRequest()
+        $request = (new ApiRequestFactory($this->uri))->create(['resource' => 'user', 'id' => 1337, 'cache' => false]);
+        $queryString = $request
             ->getUri()
             ->getQuery();
 

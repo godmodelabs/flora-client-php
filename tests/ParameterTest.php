@@ -2,24 +2,23 @@
 
 namespace Flora\Client\Test;
 
+use Flora\ApiRequestFactory;
+use GuzzleHttp\Psr7\Uri;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 use Flora\AuthProviderInterface;
-use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\UriInterface;
 
 class ParameterTest extends TestCase
 {
-    /** @var ResponseInterface */
-    private $response;
+    /** @var UriInterface */
+    private $uri;
 
     public function setUp(): void
     {
         parent::setUp();
-
-        $this->response = ResponseFactory::create()
-            ->withHeader('Content-Type', 'application/json')
-            ->withBody(StreamFactory::create('{}'));
+        $this->uri = new Uri('http://api.example.com');
     }
 
     /**
@@ -30,13 +29,7 @@ class ParameterTest extends TestCase
      */
     public function testRequestParameter($name, $value, $encoded): void
     {
-        $client = ClientFactory::create();
-        $mockHandler = $client->getMockHandler();
-        $mockHandler->append($this->response);
-
-        $client->execute(['resource' => 'user', $name => $value]);
-
-        $request = $mockHandler->getLastRequest();
+        $request = (new ApiRequestFactory($this->uri))->create(['resource' => 'user', $name => $value]);
         $this->assertEquals($name . '=' . $encoded, $request->getUri()->getQuery());
     }
 
@@ -55,59 +48,41 @@ class ParameterTest extends TestCase
 
     public function testDefaultActionParameter(): void
     {
-        $client = ClientFactory::create();
-        $mockHandler = $client->getMockHandler();
-        $mockHandler->append($this->response);
-
-        $client->execute(['resource' => 'user', 'action' => 'retrieve']);
-
-        $request = $mockHandler->getLastRequest();
+        $request = (new ApiRequestFactory($this->uri))->create(['resource' => 'user', 'action' => 'retrieve']);
         $this->assertStringNotContainsString('action=', $request->getUri()->getQuery(), 'action=retrieve should not be transmitted');
     }
 
     public function testSendRandomDataAsJson(): void
     {
-        $client = ClientFactory::create();
-        $mockHandler = $client->getMockHandler();
-        $mockHandler->append($this->response);
+        $request = (new ApiRequestFactory($this->uri))
+            ->create([
+                'resource'  => 'article',
+                'action'    => 'create',
+                'data'      => [
+                    'title' => 'Lorem Ipsum',
+                    'author'=> ['id'=> 1337]
+                ]
+            ]);
 
-        $client->execute([
-            'resource'  => 'article',
-            'action'    => 'create',
-            'data'      => [
-                'title' => 'Lorem Ipsum',
-                'author'=> ['id'=> 1337]
-            ]
-        ]);
-
-        $request = $mockHandler->getLastRequest();
         $this->assertEquals(['application/json'], $request->getHeader('Content-Type'));
         $this->assertEquals('{"title":"Lorem Ipsum","author":{"id":1337}}', (string) $request->getBody());
     }
 
     public function testFormatParameter(): void
     {
-        $client = ClientFactory::create();
-        $mockHandler = $client->getMockHandler();
-        $mockHandler->append($this->response);
+        $request = (new ApiRequestFactory($this->uri))
+            ->create([
+                'resource'  => 'user',
+                'id'        => 1337,
+                'format'    => 'image'
+            ]);
 
-        $client->execute([
-            'resource'  => 'user',
-            'id'        => 1337,
-            'format'    => 'image'
-        ]);
-
-        $request = $mockHandler->getLastRequest();
         $this->assertEquals('/user/1337.image', $request->getUri()->getPath());
         $this->assertStringNotContainsString('format=', $request->getUri()->getQuery());
     }
 
     public function testParameterOrder(): void
     {
-        $client = ClientFactory::create();
-        $mockHandler = $client->getMockHandler();
-        $mockHandler->append($this->response);
-
         $expectedQueryString =
             'filter=address.country.iso2%3DAT'
             . '&limit=10'
@@ -116,17 +91,17 @@ class ParameterTest extends TestCase
             . '&search=John'
             . '&select=id%2Cfirstname%2Clastname';
 
-        $client->execute([
-            'resource'  => 'user',
-            'search'    => 'John',
-            'page'      => 3,
-            'limit'     => 10,
-            'order'     => 'lastname:desc',
-            'select'    => 'id,firstname,lastname',
-            'filter'    => 'address.country.iso2=AT'
-        ]);
+        $request = (new ApiRequestFactory($this->uri))
+            ->create([
+                'resource'  => 'user',
+                'search'    => 'John',
+                'page'      => 3,
+                'limit'     => 10,
+                'order'     => 'lastname:desc',
+                'select'    => 'id,firstname,lastname',
+                'filter'    => 'address.country.iso2=AT'
+            ]);
 
-        $request = $mockHandler->getLastRequest();
         $this->assertEquals($expectedQueryString, $request->getUri()->getQuery());
     }
 
@@ -144,45 +119,33 @@ class ParameterTest extends TestCase
             ->with($this->isInstanceOf(RequestInterface::class))
             ->willReturn(RequestFactory::create('GET', 'http://api.example.com/'));
 
-        $client = ClientFactory::create(['authProvider' => $authProviderMock]);
-        $mockHandler = $client->getMockHandler();
-        $mockHandler->append($this->response);
+        $request = (new ApiRequestFactory($this->uri, $authProviderMock))
+            ->create([
+                'resource'  => 'user',
+                'id'        => 1337,
+                'auth'      => true
+            ]);
 
-        $client->execute([
-            'resource'  => 'user',
-            'id'        => 1337,
-            'auth'      => true
-        ]);
-
-        $querystring = $mockHandler
-            ->getLastRequest()
-            ->getUri()
-            ->getQuery();
-
-        $this->assertStringNotContainsString('auth=', $querystring, 'auth parameter must be removed from querystring');
+        $this->assertStringNotContainsString(
+            'auth=',
+            $request->getUri()->getQuery(),
+            'auth parameter must be removed from querystring'
+        );
     }
 
     public function testDefaultParameter(): void
     {
-        $client = ClientFactory::create(['defaultParams' => ['portalId' => 1]]);
-        $mockHandler = $client->getMockHandler();
-        $mockHandler->append($this->response);
+        $request = (new ApiRequestFactory($this->uri, null, ['portalId' => 1]))
+            ->create(['resource' => 'user', 'id' => 1337]);
 
-        $client->execute(['resource' => 'user', 'id' => 1337]);
-
-        $request = $mockHandler->getLastRequest();
         $this->assertStringContainsString('portalId=1', $request->getUri()->getQuery());
     }
 
     public function testOverwriteDefaultParameter(): void
     {
-        $client = ClientFactory::create(['defaultParams' => ['portalId' => 1]]);
-        $mockHandler = $client->getMockHandler();
-        $mockHandler->append($this->response);
+        $request = (new ApiRequestFactory($this->uri, null, ['portalId' => 1]))
+            ->create(['resource' => 'user', 'id' => 1337, 'portalId' => 4711]);
 
-        $client->execute(['resource' => 'user', 'id' => 1337, 'portalId' => 4711]);
-
-        $request = $mockHandler->getLastRequest();
         $this->assertStringContainsString('portalId=4711', $request->getUri()->getQuery());
     }
 
@@ -192,9 +155,13 @@ class ParameterTest extends TestCase
      */
     public function testDefaultGetParameters(string $param): void
     {
+        $response = ResponseFactory::create()
+            ->withHeader('Content-Type', 'application/json')
+            ->withBody(StreamFactory::create('{}'));
+
         $client = ClientFactory::create();
         $mockHandler = $client->getMockHandler();
-        $mockHandler->append($this->response);
+        $mockHandler->append($response);
 
         $client->execute([
             'resource' => 'article',
@@ -212,35 +179,21 @@ class ParameterTest extends TestCase
 
     public function testForceGetParameter(): void
     {
-        $client = ClientFactory::create([
-            'defaultParams' => ['client_id' => 1],
-            'forceGetParams' => ['foobar']
-        ]);
-        $mockHandler = $client->getMockHandler();
-        $mockHandler->append($this->response);
+        $request = (new ApiRequestFactory($this->uri, null, ['client_id' => 1], ['foobar']))
+            ->create([
+                'resource' => 'article',
+                'filter' => str_repeat('foo', 2048),
+                'foobar' => 1
+            ]);
 
-        $client->execute([
-            'resource' => 'article',
-            'filter' => str_repeat('foo', 2048),
-            'foobar' => 1
-        ]);
-
-        $request = $mockHandler->getLastRequest();
         $this->assertStringContainsString('foobar=1', $request->getUri()->getQuery());
     }
 
     public function testJsonForceGetParameter(): void
     {
-        $client = ClientFactory::create([
-            'defaultParams' =>  ['client_id' => 1],
-            'forceGetParams' => ['client_id']
-        ]);
-        $mockHandler = $client->getMockHandler();
-        $mockHandler->append($this->response);
+        $request = (new ApiRequestFactory($this->uri, null, ['client_id' => 1], ['client_id']))
+            ->create(['resource' => 'article', 'data' => str_repeat('foo', 2048)]);
 
-        $client->execute(['resource' => 'article', 'data' => str_repeat('foo', 2048)]);
-
-        $request = $mockHandler->getLastRequest();
         $this->assertStringContainsString('client_id=1', $request->getUri()->getQuery());
         $this->assertStringNotContainsString('client_id=1', $request->getBody()->getContents());
     }

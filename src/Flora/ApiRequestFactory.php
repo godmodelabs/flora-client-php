@@ -31,8 +31,10 @@ class ApiRequestFactory
             throw new Exception\ImplementationException('Resource must be set');
         }
 
+        $doAuth = isset($params['auth']) && (bool) $params['auth'];
+
         $uri = $this->uri->withPath($this->getPath($params));
-        foreach (['resource', 'id', 'format'] as $param) { // remove path params from request params
+        foreach (['resource', 'id', 'format', 'auth'] as $param) { // remove path params from request params
             if (isset($params[$param])) {
                 unset($params[$param]);
             }
@@ -63,7 +65,7 @@ class ApiRequestFactory
             $request = $this->applyParameters($request, $params, $this->forceGetParams);
         }
 
-        if (isset($params['auth']) && (bool) $params['auth']) {
+        if ($doAuth) {
             if ($this->authProvider === null) {
                 throw new Exception\ImplementationException('Auth provider is not configured');
             }

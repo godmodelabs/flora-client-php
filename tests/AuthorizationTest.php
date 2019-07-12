@@ -5,23 +5,20 @@ namespace Flora\Client\Test;
 use Flora;
 use Flora\AuthProviderInterface;
 use Flora\Exception\ExceptionInterface;
+use GuzzleHttp\Psr7\Uri;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\{RequestInterface, UriInterface};
 
 class AuthorizationTest extends TestCase
 {
-    /** @var ResponseInterface */
-    private $response;
+    /** @var UriInterface */
+    private $uri;
 
     public function setUp(): void
     {
         parent::setUp();
-
-        $this->response = ResponseFactory::create()
-            ->withHeader('Content-Type', 'application/json')
-            ->withBody(StreamFactory::create('{}'));
+        $this->uri = new Uri('http://api.example.com');
     }
 
     /**
@@ -32,8 +29,8 @@ class AuthorizationTest extends TestCase
         $this->expectException(Flora\Exception\ImplementationException::class);
         $this->expectExceptionMessage('Auth provider is not configured');
 
-        ClientFactory::create()
-            ->execute([
+        (new Flora\ApiRequestFactory($this->uri, null))
+            ->create([
                 'resource'  => 'user',
                 'id'        => 1337,
                 'auth'      => true
@@ -45,20 +42,14 @@ class AuthorizationTest extends TestCase
      */
     public function testAuthorizationProviderInteraction(): void
     {
-        $client = ClientFactory::create(['authProvider' => new BasicAuthentication('johndoe', 'secret')]);
-        $client
-            ->getMockHandler()
-            ->append($this->response);
-
-        $client->execute([
+        $request = (new Flora\ApiRequestFactory(
+            $this->uri,
+            new BasicAuthentication('johndoe', 'secret'))
+        )->create([
             'resource'  => 'user',
             'id'        => 1337,
             'auth'      => true
         ]);
-
-        $request = $client
-            ->getMockHandler()
-            ->getLastRequest();
 
         $this->assertTrue($request->hasHeader('Authorization'), 'Authorization header not available');
         $this->assertEquals(['am9obmRvZTpzZWNyZXQ='], $request->getHeader('Authorization'));
@@ -87,28 +78,19 @@ class AuthorizationTest extends TestCase
                 return $request->withUri($uri->withQuery(http_build_query($params)));
             });
 
-        $client = ClientFactory::create([
-            'defaultParams' => ['client_id' => 'test'],
-            'authProvider' => $authProviderMock
-        ]);
+        $request = (new Flora\ApiRequestFactory($this->uri, $authProviderMock, ['client_id' => 'test']))
+            ->create([
+                'resource'  => 'user',
+                'id'        => 1337,
+                'auth'      => true
+            ]);
 
-        $client
-            ->getMockHandler()
-            ->append($this->response);
-
-        $client->execute([
-            'resource'  => 'user',
-            'id'        => 1337,
-            'auth'      => true
-        ]);
-
-        $querystring = $client
-            ->getMockHandler()
-            ->getLastRequest()
+        $querystring = $request
             ->getUri()
             ->getQuery();
 
         $this->assertStringContainsString('client_id=test', $querystring);
         $this->assertStringContainsString('access_token=x.y.z', $querystring);
+        $this->assertStringNotContainsString('auth=1', $querystring);
     }
 }
