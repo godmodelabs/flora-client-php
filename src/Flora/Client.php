@@ -5,20 +5,16 @@ namespace Flora;
 use Closure;
 use Flora\Exception\ImplementationException;
 use GuzzleHttp\Exception\GuzzleException;
-use GuzzleHttp\Promise\{Promise, PromiseInterface};
+use GuzzleHttp\Promise\PromiseInterface;
 use function GuzzleHttp\Promise\unwrap;
-use GuzzleHttp\Psr7\{Request, Stream, Uri};
+use GuzzleHttp\Psr7\Uri;
 use GuzzleHttp\Client as HttpClient;
-use const PHP_SAPI;
-use Psr\Http\Message\{RequestInterface, ResponseInterface};
+use Psr\Http\Message\ResponseInterface;
 use stdClass;
 use Throwable;
 
 class Client
 {
-    /** @var Uri */
-    private $uri;
-
     /** @var HttpClient */
     private $httpClient;
 
@@ -28,14 +24,8 @@ class Client
         'timeout'       => 30       // Guzzle HTTP client waits forever by default
     ];
 
-    /** @var AuthProviderInterface */
-    private $authProvider;
-
-    /** @var array */
-    private $defaultParams = [];
-
-    /** @var array */
-    private $forceGetParams;
+    /** @var ApiRequestFactory */
+    private $requestFactory;
 
     /**
      * @param string $url URL of Flora instance
@@ -51,28 +41,31 @@ class Client
      */
     public function __construct($url, array $opts = [])
     {
-        $this->uri = new Uri($url);
         $this->httpClient = isset($opts['httpClient']) && $opts['httpClient'] instanceof HttpClient
             ? $opts['httpClient']
             : new HttpClient();
 
         if (isset($opts['httpOptions'])) $this->setHttpOptions($opts['httpOptions']);
 
+        $authProvider = null;
         if (isset($opts['authProvider'])) {
             if (!($opts['authProvider'] instanceof AuthProviderInterface)) {
                 throw new ImplementationException('authProvider must be in instance of AuthProviderInterface');
             }
-            $this->authProvider = $opts['authProvider'];
+            $authProvider = $opts['authProvider'];
         }
 
+        $defaultParams = [];
         if (isset($opts['defaultParams']) && is_array($opts['defaultParams']) && count($opts['defaultParams']) > 0) {
-            $this->defaultParams = $opts['defaultParams'];
+            $defaultParams = $opts['defaultParams'];
         }
 
-        $this->forceGetParams = ['client_id', 'action', 'access_token'];
+        $forceGetParams = ['client_id', 'action', 'access_token'];
         if (isset($opts['forceGetParams']) && is_array($opts['forceGetParams']) && count($opts['forceGetParams']) > 0) {
-            $this->forceGetParams = array_merge($this->forceGetParams, $opts['forceGetParams']);
+            $forceGetParams = array_merge($forceGetParams, $opts['forceGetParams']);
         }
+
+        $this->requestFactory = new ApiRequestFactory(new Uri($url), $authProvider, $defaultParams, $forceGetParams);
     }
 
     /**
@@ -97,15 +90,7 @@ class Client
      */
     public function execute(array $params): object
     {
-        if (!isset($params['resource']) || empty($params['resource'])) throw new Exception\ImplementationException('Resource must be set');
-
-        $request = $this->prepareRequest($params);
-
-        $auth = isset($params['auth']) && (bool) $params['auth'];
-        if ($auth) {
-            if ($this->authProvider === null) throw new Exception\ImplementationException('Auth provider is not configured');
-            $request = $this->authProvider->auth($request);
-        }
+        $request = $this->requestFactory->create($params);
 
         try {
             $response = $this->httpClient->send($request, $this->httpOptions);
@@ -122,15 +107,7 @@ class Client
      */
     public function executeAsync(array $params): PromiseInterface
     {
-        if (!isset($params['resource']) || empty($params['resource'])) return self::reject('Resource must be set');
-
-        $request = $this->prepareRequest($params);
-
-        $auth = isset($params['auth']) && (bool) $params['auth'];
-        if ($auth) {
-            if ($this->authProvider === null) return self::reject('Auth provider is not configured');
-            $request = $this->authProvider->auth($request);
-        }
+        $request = $this->requestFactory->create($params);
 
         return $this->httpClient
             ->sendAsync($request)
@@ -153,13 +130,6 @@ class Client
         return unwrap($promises);
     }
 
-    private static function reject(string $reason): PromiseInterface
-    {
-        $promise = new Promise();
-        $promise->reject($reason);
-        return $promise;
-    }
-
     private static function handleResponse(ResponseInterface $response): stdClass
     {
         $statusCode = $response->getStatusCode();
@@ -172,124 +142,6 @@ class Client
         }
 
         return $result;
-    }
-
-    private function prepareRequest(array $params): RequestInterface
-    {
-        $uri = $this->uri->withPath($this->getPath($params));
-
-        foreach (['resource', 'id', 'format'] as $param) { // remove path params from request params
-            if (isset($params[$param])) unset($params[$param]);
-        }
-
-        if (array_key_exists('cache', $params)) {
-            if ((bool) $params['cache'] === false) $params['_'] = time();
-            unset($params['cache']);
-        }
-
-        if (isset($params['select']) && is_array($params['select'])) $params['select'] = stringify_select($params['select']);
-        if (isset($params['action']) && $params['action'] === 'retrieve') unset($params['action']);
-
-        $httpMethod = $this->getHttpMethod($params);
-        $request = new Request($httpMethod, $uri, ['Referer' => $this->getCurrentUri()]);
-
-        if (!empty($this->defaultParams)) $params = array_merge($this->defaultParams, $params);
-        if (!empty($params)) $request = $this->applyParameters($request, $params, $this->forceGetParams);
-
-        return $request;
-    }
-
-    /**
-     * @param array $params
-     * @return string
-     */
-    private function getPath(array $params): string
-    {
-        $path = '';
-
-        if (isset($params['resource'])) $path = '/' . $params['resource'] . '/';
-        if (isset($params['id'])) $path .= $params['id'];
-        if (isset($params['format'])) $path .= '.' . $params['format'];
-
-        return $path;
-    }
-
-    private function getHttpMethod(array $params): string
-    {
-        $httpMethod = 'GET';
-
-        if (isset($params['action']) && $params['action'] !== 'retrieve') $httpMethod = 'POST';
-        if (strlen(http_build_query($params)) > 2000) $httpMethod = 'POST';
-        if (isset($params['httpMethod'])) $httpMethod = strtoupper($params['httpMethod']);
-
-        return $httpMethod;
-    }
-
-    /**
-     * Add parameters to request based on HTTP method
-     *
-     * @param RequestInterface $request
-     * @param array $params
-     * @param array $forceGetParams Optional Transfer parameters as part of url
-     * @return RequestInterface
-     */
-    private function applyParameters(RequestInterface $request, array $params, array $forceGetParams = []): RequestInterface
-    {
-        if (empty($params)) return $request;
-
-        ksort($params);
-        if ($request->getMethod() === 'GET') return $this->handleGetRequest($request, $params);
-        return $this->handlePostRequest($request, $params, $forceGetParams);
-    }
-
-    private function handleGetRequest(RequestInterface $request, array $params): RequestInterface
-    {
-        $uri = $request->getUri()->withQuery(http_build_query($params));
-        return $request->withUri($uri);
-    }
-
-    private function handlePostRequest(RequestInterface $request, array $params, array $forceGetParams = []): RequestInterface
-    {
-        $isJsonRequest = array_key_exists('data', $params) && !empty($params['data']);
-
-        if (!empty($forceGetParams) && !$isJsonRequest) {
-            $getParams = [];
-            foreach ($forceGetParams as $defaultGetParam) {
-                if (!isset($params[$defaultGetParam])) continue;
-                $getParams[$defaultGetParam] = $params[$defaultGetParam];
-                unset($params[$defaultGetParam]);
-            }
-            $request = $request->withUri($request->getUri()->withQuery(http_build_query($getParams)));
-        }
-
-        $stream = fopen('php://memory', 'wb+');
-        $body   = new Stream($stream);
-
-        if ($isJsonRequest) {
-            $body->write(json_encode($params['data']));
-            unset($params['data']);
-            $request = $request
-                ->withUri($request->getUri()->withQuery(http_build_query($params)))
-                ->withHeader('Content-Type', 'application/json');
-        } else {
-            $body->write(http_build_query($params));
-            $request = $request->withAddedHeader('Content-Type', 'application/x-www-form-urlencoded');
-        }
-
-        return $request->withBody($body);
-    }
-
-    private function getCurrentUri(): string
-    {
-        if (PHP_SAPI === 'cli') $currentUri = 'file://';
-        elseif (isset($_SERVER['HTTP_HOST'])) $currentUri = 'http://' . $_SERVER['HTTP_HOST'];
-        else $currentUri = 'unknown://';
-
-        if (isset($_SERVER['REQUEST_URI'])) $currentUri .= $_SERVER['REQUEST_URI'];
-        elseif (PHP_SAPI === 'cli' && isset($_SERVER['argv'])) $currentUri .= implode(' ', $_SERVER['argv']);
-        elseif (isset($_SERVER['SCRIPT_FILENAME'])) $currentUri .= $_SERVER['SCRIPT_FILENAME'];
-
-        return $currentUri;
     }
 
     /**

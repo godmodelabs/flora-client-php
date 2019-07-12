@@ -2,7 +2,7 @@
 
 namespace Flora\Client\Test;
 
-use Flora\Exception\NotFoundException;
+use Flora\Exception\{ImplementationException, NotFoundException};
 use GuzzleHttp\Promise\RejectionException;
 use PHPUnit\Framework\TestCase;
 
@@ -20,7 +20,7 @@ class AsyncTest extends TestCase
 
     public function testRejectionIfResourceIsMissing(): void
     {
-        $this->expectException(RejectionException::class);
+        $this->expectException(ImplementationException::class);
         $this->expectExceptionMessage('Resource must be set');
 
         ClientFactory::create()
@@ -30,7 +30,7 @@ class AsyncTest extends TestCase
 
     public function testRejectionIfAuthProviderIsNotConfigured(): void
     {
-        $this->expectException(RejectionException::class);
+        $this->expectException(ImplementationException::class);
         $this->expectExceptionMessage('Auth provider is not configured');
 
         ClientFactory::create()
