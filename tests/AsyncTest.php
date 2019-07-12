@@ -18,29 +18,6 @@ class AsyncTest extends TestCase
         );
     }
 
-    public function testRejectionIfResourceIsMissing(): void
-    {
-        $this->expectException(ImplementationException::class);
-        $this->expectExceptionMessage('Resource must be set');
-
-        ClientFactory::create()
-            ->executeAsync([])
-            ->wait();
-    }
-
-    public function testRejectionIfAuthProviderIsNotConfigured(): void
-    {
-        $this->expectException(ImplementationException::class);
-        $this->expectExceptionMessage('Auth provider is not configured');
-
-        ClientFactory::create()
-            ->executeAsync([
-                'resource' => 'article',
-                'auth' => true
-            ])
-            ->wait();
-    }
-
     public function testAsyncRequest(): void
     {
         $client = ClientFactory::create();
