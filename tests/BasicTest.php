@@ -21,7 +21,7 @@ class BasicTest extends TestCase
     public function testApiHost(): void
     {
         $request = (new ApiRequestFactory($this->uri))->create(['resource' => 'user']);
-        $this->assertEquals(['api.example.com'], $request->getHeader('Host'));
+        self::assertEquals(['api.example.com'], $request->getHeader('Host'));
     }
 
     public function testResourceInUrl(): void
@@ -29,8 +29,8 @@ class BasicTest extends TestCase
         $request = (new ApiRequestFactory($this->uri))->create(['resource' => 'user']);
         $uri = $request->getUri();
 
-        $this->assertEquals('/user/', $uri->getPath());
-        $this->assertStringNotContainsString('resource=', $uri->getQuery());
+        self::assertEquals('/user/', $uri->getPath());
+        self::assertStringNotContainsString('resource=', $uri->getQuery());
     }
 
     public function testIdInUrl(): void
@@ -38,8 +38,8 @@ class BasicTest extends TestCase
         $request = (new ApiRequestFactory($this->uri))->create(['resource' => 'user', 'id' => 1337]);
         $uri = $request->getUri();
 
-        $this->assertStringStartsWith('/user/1337', $uri->getPath());
-        $this->assertStringNotContainsString('id=', $uri->getQuery());
+        self::assertStringStartsWith('/user/1337', $uri->getPath());
+        self::assertStringNotContainsString('id=', $uri->getQuery());
     }
 
     public function testReferer(): void
@@ -58,9 +58,9 @@ class BasicTest extends TestCase
             ->getMockHandler()
             ->getLastRequest();
 
-        $this->assertArrayHasKey('Referer', $request->getHeaders(), 'Referer not set');
-        $this->assertStringStartsWith('file://', $request->getHeaderLine('Referer'));
-        $this->assertStringContainsString('phpunit', $request->getHeaderLine('Referer'));
+        self::assertArrayHasKey('Referer', $request->getHeaders(), 'Referer not set');
+        self::assertStringStartsWith('file://', $request->getHeaderLine('Referer'));
+        self::assertStringContainsString('phpunit', $request->getHeaderLine('Referer'));
     }
 
     public function testCacheBuster(): void
@@ -70,8 +70,8 @@ class BasicTest extends TestCase
             ->getUri()
             ->getQuery();
 
-        $this->assertStringNotContainsString('cache', $queryString);
-        $this->assertStringContainsString('_=', $queryString);
-        $this->assertRegExp('#_=\d+#', $queryString);
+        self::assertStringNotContainsString('cache', $queryString);
+        self::assertStringContainsString('_=', $queryString);
+        self::assertRegExp('#_=\d+#', $queryString);
     }
 }

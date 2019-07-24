@@ -26,7 +26,7 @@ class RequestMethodTest extends TestCase
     public function testHttpGetMethod(array $params, string $message): void
     {
         $request = (new ApiRequestFactory($this->uri))->create($params);
-        $this->assertEquals('GET', $request->getMethod(), $message);
+        self::assertEquals('GET', $request->getMethod(), $message);
     }
 
     public function testHttpPostMethodForNonRetrieveActions(): void
@@ -34,8 +34,8 @@ class RequestMethodTest extends TestCase
         $request = (new ApiRequestFactory($this->uri))
             ->create(['resource' => 'user', 'id' => 1337, 'action' => 'foobar']);
 
-        $this->assertEquals('POST', $request->getMethod());
-        $this->assertEquals('application/x-www-form-urlencoded', $request->getHeaderLine('Content-Type'));
+        self::assertEquals('POST', $request->getMethod());
+        self::assertEquals('application/x-www-form-urlencoded', $request->getHeaderLine('Content-Type'));
     }
 
     public function testHttpMethodParameterOverwrite(): void
@@ -43,7 +43,7 @@ class RequestMethodTest extends TestCase
         $request = (new ApiRequestFactory($this->uri))
             ->create(['resource' => 'user', 'id' => 1337, 'httpMethod' => 'POST']);
 
-        $this->assertEquals('POST', $request->getMethod());
+        self::assertEquals('POST', $request->getMethod());
     }
 
     public function testHttpPostMethodForLongQueryStrings(): void
@@ -58,8 +58,8 @@ class RequestMethodTest extends TestCase
                 'page'      => 10
             ]);
 
-        $this->assertEquals('POST', $request->getMethod());
-        $this->assertStringContainsString(
+        self::assertEquals('POST', $request->getMethod());
+        self::assertStringContainsString(
             'select=',
             (string) $request->getBody(),
             'POST body doesn\'t contain parameters'
@@ -75,8 +75,8 @@ class RequestMethodTest extends TestCase
                 'data'      => ['title' => 'Lorem Ipsum']
             ]);
 
-        $this->assertEquals('POST', $request->getMethod());
-        $this->assertEquals('action=create', $request->getUri()->getQuery());
+        self::assertEquals('POST', $request->getMethod());
+        self::assertEquals('action=create', $request->getUri()->getQuery());
     }
 
     public function defaultHttpMethodDataProvider(): array

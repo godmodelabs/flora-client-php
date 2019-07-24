@@ -10,12 +10,12 @@ class SelectSerializationTest extends TestCase
 {
     public function testSimpleArray(): void
     {
-        $this->assertEquals('id,name', stringify_select(['id', 'name']));
+        self::assertEquals('id,name', stringify_select(['id', 'name']));
     }
 
     public function testNestedArrays(): void
     {
-        $this->assertEquals('id,name,attr1,attr2', stringify_select(['id', 'name', ['attr1', 'attr2']]));
+        self::assertEquals('id,name,attr1,attr2', stringify_select(['id', 'name', ['attr1', 'attr2']]));
     }
 
     public function testNestedArraysWithNonNumericKeys(): void
@@ -27,12 +27,12 @@ class SelectSerializationTest extends TestCase
             'attr'
         ];
 
-        $this->assertEquals('id,name,subGroup[attr1,attr2],attr', stringify_select($spec));
+        self::assertEquals('id,name,subGroup[attr1,attr2],attr', stringify_select($spec));
     }
 
     public function testNonNumericKeysWithNonArrayValues(): void
     {
-        $this->assertEquals('subGroup.attr', stringify_select(['subGroup' => 'attr']));
+        self::assertEquals('subGroup.attr', stringify_select(['subGroup' => 'attr']));
     }
 
     public function testNestedNonNumericArrays(): void
@@ -41,7 +41,7 @@ class SelectSerializationTest extends TestCase
             'subGroup' => ['subSubGroup' => 'attr']
         ];
 
-        $this->assertEquals('subGroup.subSubGroup.attr', stringify_select($spec));
+        self::assertEquals('subGroup.subSubGroup.attr', stringify_select($spec));
     }
 
     public function testDeeplyNestedArrays(): void
@@ -62,12 +62,12 @@ class SelectSerializationTest extends TestCase
         ];
 
         $selectString = 'id,name,subGroupA[id,name,subSubGroupA[attr1,attr2],subSubGroupB[subSubSubGroupA[attr1,attr2],subSubSubItem,subSubSubGroupB[attr1,attr2]]]';
-        $this->assertEquals($selectString, stringify_select($spec));
+        self::assertEquals($selectString, stringify_select($spec));
     }
 
     public function testSingleItemSubItemGroup(): void
     {
-        $this->assertEquals('group.attr', stringify_select(['group' => ['attr']]));
+        self::assertEquals('group.attr', stringify_select(['group' => ['attr']]));
     }
 
     public function testError(): void

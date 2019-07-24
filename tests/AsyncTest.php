@@ -12,7 +12,7 @@ class AsyncTest extends TestCase
     {
         $client = ClientFactory::create();
 
-        $this->assertTrue(
+        self::assertTrue(
             method_exists($client, 'executeAsync'),
             'executeAsync method does not exists'
         );
@@ -35,7 +35,7 @@ class AsyncTest extends TestCase
             ->executeAsync(['resource' => 'article'])
             ->wait();
 
-        $this->assertEquals($expectedResponse, $response);
+        self::assertEquals($expectedResponse, $response);
     }
 
     public function testAsyncRequestFail(): void

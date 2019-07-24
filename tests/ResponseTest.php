@@ -30,7 +30,7 @@ class ResponseTest extends TestCase
         ];
 
         $response = $client->execute(['resource' => 'user', 'id' => 1337]);
-        $this->assertEquals($expectedPayload, $response);
+        self::assertEquals($expectedPayload, $response);
     }
 
     public function testNonJsonResponse(): void
@@ -47,7 +47,7 @@ class ResponseTest extends TestCase
             );
 
         $response = $client->execute(['resource' => 'user', 'id' => 1337, 'format' => 'image']);
-        $this->assertEquals('image-content', $response);
+        self::assertEquals('image-content', $response);
     }
 
     public function testNonJsonErrorResponse(): void

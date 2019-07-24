@@ -10,7 +10,7 @@ class ParallelTest extends TestCase
 {
     public function testMethodExists(): void
     {
-        $this->assertTrue(
+        self::assertTrue(
             method_exists(ClientFactory::create(), 'executeParallel'),
             'executeParallel method does not exists'
         );
@@ -49,7 +49,7 @@ class ParallelTest extends TestCase
             ['resource' => 'bar', 'id' => 1]
         ]);
 
-        $this->assertEquals([$fooBody, $barBody], $responses);
+        self::assertEquals([$fooBody, $barBody], $responses);
     }
 
     public function testParallelRequestExecutionFail(): void

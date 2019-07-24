@@ -30,7 +30,7 @@ class ParameterTest extends TestCase
     public function testRequestParameter($name, $value, $encoded): void
     {
         $request = (new ApiRequestFactory($this->uri))->create(['resource' => 'user', $name => $value]);
-        $this->assertEquals($name . '=' . $encoded, $request->getUri()->getQuery());
+        self::assertEquals($name . '=' . $encoded, $request->getUri()->getQuery());
     }
 
     public function parameters(): array
@@ -49,7 +49,7 @@ class ParameterTest extends TestCase
     public function testDefaultActionParameter(): void
     {
         $request = (new ApiRequestFactory($this->uri))->create(['resource' => 'user', 'action' => 'retrieve']);
-        $this->assertStringNotContainsString('action=', $request->getUri()->getQuery(), 'action=retrieve should not be transmitted');
+        self::assertStringNotContainsString('action=', $request->getUri()->getQuery(), 'action=retrieve should not be transmitted');
     }
 
     public function testSendRandomDataAsJson(): void
@@ -64,8 +64,8 @@ class ParameterTest extends TestCase
                 ]
             ]);
 
-        $this->assertEquals(['application/json'], $request->getHeader('Content-Type'));
-        $this->assertEquals('{"title":"Lorem Ipsum","author":{"id":1337}}', (string) $request->getBody());
+        self::assertEquals(['application/json'], $request->getHeader('Content-Type'));
+        self::assertEquals('{"title":"Lorem Ipsum","author":{"id":1337}}', (string) $request->getBody());
     }
 
     public function testFormatParameter(): void
@@ -77,8 +77,8 @@ class ParameterTest extends TestCase
                 'format'    => 'image'
             ]);
 
-        $this->assertEquals('/user/1337.image', $request->getUri()->getPath());
-        $this->assertStringNotContainsString('format=', $request->getUri()->getQuery());
+        self::assertEquals('/user/1337.image', $request->getUri()->getPath());
+        self::assertStringNotContainsString('format=', $request->getUri()->getQuery());
     }
 
     public function testParameterOrder(): void
@@ -102,7 +102,7 @@ class ParameterTest extends TestCase
                 'filter'    => 'address.country.iso2=AT'
             ]);
 
-        $this->assertEquals($expectedQueryString, $request->getUri()->getQuery());
+        self::assertEquals($expectedQueryString, $request->getUri()->getQuery());
     }
 
     public function testAuthorizeParameter(): void
@@ -126,7 +126,7 @@ class ParameterTest extends TestCase
                 'auth'      => true
             ]);
 
-        $this->assertStringNotContainsString(
+        self::assertStringNotContainsString(
             'auth=',
             $request->getUri()->getQuery(),
             'auth parameter must be removed from querystring'
@@ -138,7 +138,7 @@ class ParameterTest extends TestCase
         $request = (new ApiRequestFactory($this->uri, null, ['portalId' => 1]))
             ->create(['resource' => 'user', 'id' => 1337]);
 
-        $this->assertStringContainsString('portalId=1', $request->getUri()->getQuery());
+        self::assertStringContainsString('portalId=1', $request->getUri()->getQuery());
     }
 
     public function testOverwriteDefaultParameter(): void
@@ -146,7 +146,7 @@ class ParameterTest extends TestCase
         $request = (new ApiRequestFactory($this->uri, null, ['portalId' => 1]))
             ->create(['resource' => 'user', 'id' => 1337, 'portalId' => 4711]);
 
-        $this->assertStringContainsString('portalId=4711', $request->getUri()->getQuery());
+        self::assertStringContainsString('portalId=4711', $request->getUri()->getQuery());
     }
 
     /**
@@ -172,9 +172,9 @@ class ParameterTest extends TestCase
         $request = $mockHandler->getLastRequest();
         $body = (string) $request->getBody();
 
-        $this->assertStringContainsString("$param=test", $request->getUri()->getQuery());
-        $this->assertNotEmpty($body);
-        $this->assertStringNotContainsString("$param=test", $body);
+        self::assertStringContainsString("$param=test", $request->getUri()->getQuery());
+        self::assertNotEmpty($body);
+        self::assertStringNotContainsString("$param=test", $body);
     }
 
     public function testForceGetParameter(): void
@@ -186,7 +186,7 @@ class ParameterTest extends TestCase
                 'foobar' => 1
             ]);
 
-        $this->assertStringContainsString('foobar=1', $request->getUri()->getQuery());
+        self::assertStringContainsString('foobar=1', $request->getUri()->getQuery());
     }
 
     public function testJsonForceGetParameter(): void
@@ -194,8 +194,8 @@ class ParameterTest extends TestCase
         $request = (new ApiRequestFactory($this->uri, null, ['client_id' => 1], ['client_id']))
             ->create(['resource' => 'article', 'data' => str_repeat('foo', 2048)]);
 
-        $this->assertStringContainsString('client_id=1', $request->getUri()->getQuery());
-        $this->assertStringNotContainsString('client_id=1', $request->getBody()->getContents());
+        self::assertStringContainsString('client_id=1', $request->getUri()->getQuery());
+        self::assertStringNotContainsString('client_id=1', $request->getBody()->getContents());
     }
 
     public function forceGetParamProvider(): array

@@ -22,8 +22,8 @@ class OptionTest extends TestCase
             ->getMockHandler()
             ->getLastOptions();
 
-        $this->assertArrayHasKey('timeout', $options);
-        $this->assertEquals(30, $options['timeout'], 'Default request timeout not set');
+        self::assertArrayHasKey('timeout', $options);
+        self::assertEquals(30, $options['timeout'], 'Default request timeout not set');
     }
 
     public function testHttpRequestTimeoutOption(): void
@@ -39,6 +39,6 @@ class OptionTest extends TestCase
         $client->execute(['resource' => 'user', 'id' => 1337]);
 
         $options = $mockHandler->getLastOptions();
-        $this->assertEquals(5, $options['timeout'], 'Request timeout not set correctly');
+        self::assertEquals(5, $options['timeout'], 'Request timeout not set correctly');
     }
 }

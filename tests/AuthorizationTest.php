@@ -51,8 +51,8 @@ class AuthorizationTest extends TestCase
             'auth'      => true
         ]);
 
-        $this->assertTrue($request->hasHeader('Authorization'), 'Authorization header not available');
-        $this->assertEquals(['am9obmRvZTpzZWNyZXQ='], $request->getHeader('Authorization'));
+        self::assertTrue($request->hasHeader('Authorization'), 'Authorization header not available');
+        self::assertEquals(['am9obmRvZTpzZWNyZXQ='], $request->getHeader('Authorization'));
     }
 
     /**
@@ -89,8 +89,8 @@ class AuthorizationTest extends TestCase
             ->getUri()
             ->getQuery();
 
-        $this->assertStringContainsString('client_id=test', $querystring);
-        $this->assertStringContainsString('access_token=x.y.z', $querystring);
-        $this->assertStringNotContainsString('auth=1', $querystring);
+        self::assertStringContainsString('client_id=test', $querystring);
+        self::assertStringContainsString('access_token=x.y.z', $querystring);
+        self::assertStringNotContainsString('auth=1', $querystring);
     }
 }
