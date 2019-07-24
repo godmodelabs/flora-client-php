@@ -2,8 +2,7 @@
 
 namespace Flora\Client\Test;
 
-use Flora\Exception\{ImplementationException, NotFoundException};
-use GuzzleHttp\Promise\RejectionException;
+use Flora\Exception\NotFoundException;
 use PHPUnit\Framework\TestCase;
 
 class AsyncTest extends TestCase
