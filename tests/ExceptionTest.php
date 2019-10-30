@@ -3,6 +3,7 @@
 namespace Flora\Client\Test;
 
 use Flora\Exception\BadRequestException;
+use Flora\Exception\ExceptionInterface as FloraException;
 use Flora\Exception\ForbiddenException;
 use Flora\Exception\ImplementationException;
 use Flora\Exception\NotFoundException;
@@ -22,7 +23,7 @@ class ExceptionTest extends TestCase
      * @param string $exceptionClass
      * @param string $message
      * @param ResponseInterface $response
-     * @dataProvider exceptionDataProvider
+     * @dataProvider requestExceptionDataProvider
      */
     public function testRequestExceptions(string $exceptionClass, string $message, ResponseInterface $response): void
     {
@@ -35,6 +36,15 @@ class ExceptionTest extends TestCase
             ->append($response);
 
         $client->execute(['resource' => 'user', 'id' => 1337]);
+    }
+
+    /**
+     * @param string $exceptionClass
+     * @dataProvider exceptionClassDataProvider
+     */
+    public function testExceptionBaseClass(string $exceptionClass): void
+    {
+        self::assertInstanceOf(FloraException::class, new $exceptionClass());
     }
 
     public function testFallbackException(): void
@@ -84,7 +94,7 @@ class ExceptionTest extends TestCase
         $client->execute([]);
     }
 
-    public function exceptionDataProvider(): array
+    public function requestExceptionDataProvider(): array
     {
         return [
             [
@@ -129,6 +139,20 @@ class ExceptionTest extends TestCase
                     ->withHeader('Content-Type', 'application/json')
                     ->withBody(StreamFactory::create('{"meta":{},"data":null,"error":{"message":"Please try again later"},"cursor":null}'))
             ]
+        ];
+    }
+
+    public function exceptionClassDataProvider(): array
+    {
+        return [
+            [BadRequestException::class],
+            [ForbiddenException::class],
+            [ImplementationException::class],
+            [NotFoundException::class],
+            [ServerException::class],
+            [ServiceUnavailableException::class],
+            [TransferException::class],
+            [UnauthorizedException::class],
         ];
     }
 }
