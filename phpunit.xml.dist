@@ -9,7 +9,7 @@
          convertWarningsToExceptions="true">
 
     <php>
-        <ini name="error_reporting" value="E_ALL"/>
+        <ini name="error_reporting" value="-1"/>
     </php>
 
     <testsuites>
