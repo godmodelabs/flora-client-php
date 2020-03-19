@@ -39,6 +39,6 @@
     },
     "require-dev": {
         "http-interop/http-factory-guzzle": "^1.0",
-        "phpunit/phpunit": "^8.1"
+        "phpunit/phpunit": "^9.0"
     }
 }
