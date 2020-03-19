@@ -5,6 +5,7 @@ namespace Flora\Client\Test;
 use Flora\Exception\BadRequestException;
 use Flora\Exception\ExceptionInterface as FloraException;
 use Flora\Exception\ForbiddenException;
+use Flora\Exception\GatewayTimeoutException;
 use Flora\Exception\ImplementationException;
 use Flora\Exception\NotFoundException;
 use Flora\Exception\RuntimeException;
@@ -97,47 +98,54 @@ class ExceptionTest extends TestCase
     public function requestExceptionDataProvider(): array
     {
         return [
-            [
+            'bad request' => [
                 BadRequestException::class,
                 'Something went wrong',
                 ResponseFactory::create(400)
                     ->withHeader('Content-Type', 'application/json')
                     ->withBody(StreamFactory::create('{"meta":{},"data":null,"error":{"message":"Something went wrong"},"cursor":null}'))
             ],
-            [
+            'unauthorized' => [
                 UnauthorizedException::class,
                 'Authentication required',
                 ResponseFactory::create(401)
                     ->withHeader('Content-Type', 'application/json')
                     ->withBody(StreamFactory::create('{"meta":{},"data":null,"error":{"message":"Authentication required"},"cursor":null}'))
             ],
-            [
+            'forbidden' => [
                 ForbiddenException::class,
                 'You\'re not allowed to access this item',
                 ResponseFactory::create(403)
                     ->withHeader('Content-Type', 'application/json')
                     ->withBody(StreamFactory::create('{"meta":{},"data":null,"error":{"message":"You\'re not allowed to access this item"},"cursor":null}'))
             ],
-            [
+            'not found' => [
                 NotFoundException::class,
                 'Item not found',
                 ResponseFactory::create(404)
                     ->withHeader('Content-Type', 'application/json')
                     ->withBody(StreamFactory::create('{"meta":{},"data":null,"error":{"message":"Item not found"},"cursor":null}'))
             ],
-            [
+            'internal server error' => [
                 ServerException::class,
                 'Something bad happened',
                 ResponseFactory::create(500)
                     ->withHeader('Content-Type', 'application/json')
                     ->withBody(StreamFactory::create('{"meta":{},"data":null,"error":{"message":"Something bad happened"},"cursor":null}'))
             ],
-            [
+            'service unavailable' => [
                 ServiceUnavailableException::class,
                 'Please try again later',
                 ResponseFactory::create(503)
                     ->withHeader('Content-Type', 'application/json')
                     ->withBody(StreamFactory::create('{"meta":{},"data":null,"error":{"message":"Please try again later"},"cursor":null}'))
+            ],
+            'gateway timeout' => [
+                GatewayTimeoutException::class,
+                'Gateway Timeout',
+                ResponseFactory::create(504, 'Gateway Timeout')
+                    ->withHeader('Content-Type', 'text/html')
+                    ->withBody(StreamFactory::create('<html lang="en"><body><h1>Gateway Timeout</h1></body></html>'))
             ]
         ];
     }
