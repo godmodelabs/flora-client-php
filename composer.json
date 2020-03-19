@@ -2,6 +2,7 @@
     "name": "godmodelabs/flora-client-php",
     "description": "PHP client for Flora based APIs",
     "license": "MIT",
+    "type": "library",
     "authors": [
         {
             "name": "Mark Plomer",
