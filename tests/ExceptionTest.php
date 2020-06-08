@@ -2,6 +2,7 @@
 
 namespace Flora\Client\Test;
 
+use Flora\Exception\BadGatewayException;
 use Flora\Exception\BadRequestException;
 use Flora\Exception\ExceptionInterface as FloraException;
 use Flora\Exception\ForbiddenException;
@@ -132,6 +133,13 @@ class ExceptionTest extends TestCase
                 ResponseFactory::create(500)
                     ->withHeader('Content-Type', 'application/json')
                     ->withBody(StreamFactory::create('{"meta":{},"data":null,"error":{"message":"Something bad happened"},"cursor":null}'))
+            ],
+            'bad_gateway' => [
+                BadGatewayException::class,
+                'Please try again later',
+                ResponseFactory::create(502)
+                    ->withHeader('Content-Type', 'application/json')
+                    ->withBody(StreamFactory::create('{"meta":{},"data":null,"error":{"message":"Please try again later"},"cursor":null}'))
             ],
             'service unavailable' => [
                 ServiceUnavailableException::class,
