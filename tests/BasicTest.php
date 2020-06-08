@@ -72,6 +72,6 @@ class BasicTest extends TestCase
 
         self::assertStringNotContainsString('cache', $queryString);
         self::assertStringContainsString('_=', $queryString);
-        self::assertRegExp('#_=\d+#', $queryString);
+        self::assertMatchesRegularExpression('#_=\d+#', $queryString);
     }
 }
