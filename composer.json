@@ -35,7 +35,7 @@
     "require": {
         "php": ">=7.3",
         "ext-json": "*",
-        "guzzlehttp/guzzle": "~6.2"
+        "guzzlehttp/guzzle": "^6.5 || ^7.2"
     },
     "require-dev": {
         "http-interop/http-factory-guzzle": "^1.0",
