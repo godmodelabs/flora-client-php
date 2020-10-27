@@ -33,23 +33,6 @@ class ResponseTest extends TestCase
         self::assertEquals($expectedPayload, $response);
     }
 
-    public function testNonJsonResponse(): void
-    {
-        $this->markTestSkipped('TypeError because "execute" method is defined to return stdClass object');
-
-        $client = ClientFactory::create();
-        $client
-            ->getMockHandler()
-            ->append(
-                ResponseFactory::create()
-                    ->withHeader('Content-Type', 'image/jpeg')
-                    ->withBody(StreamFactory::create('image-content'))
-            );
-
-        $response = $client->execute(['resource' => 'user', 'id' => 1337, 'format' => 'image']);
-        self::assertEquals('image-content', $response);
-    }
-
     public function testNonJsonErrorResponse(): void
     {
         $this->expectException(NotFoundException::class);
