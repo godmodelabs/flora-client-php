@@ -6,6 +6,7 @@ use Closure;
 use Flora\Exception\ImplementationException;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Promise\PromiseInterface;
+use JsonException;
 use function GuzzleHttp\Promise\unwrap;
 use GuzzleHttp\Psr7\Uri;
 use GuzzleHttp\Client as HttpClient;
@@ -84,9 +85,8 @@ class Client
      *      @var string             $httpMethod     optional    Explicitly set/override HTTP (GET, POST,...) method
      *      @var array|stdClass     $data           optional    Send $data as JSON
      * }
-     * @return stdClass
-     * @throws Exception\ImplementationException
-     * @throws Exception\RuntimeException
+     * @throws JsonException
+     * @return object
      */
     public function execute(array $params): object
     {
@@ -94,11 +94,10 @@ class Client
 
         try {
             $response = $this->httpClient->send($request, $this->httpOptions);
+            return self::handleResponse($response);
         } catch (GuzzleException $e) {
             throw new Exception\TransferException($e->getMessage(), $e->getCode(), $e);
         }
-
-        return self::handleResponse($response);
     }
 
     /**
@@ -130,18 +129,33 @@ class Client
         return unwrap($promises);
     }
 
+    /**
+     * @param ResponseInterface $response
+     * @return stdClass
+     */
     private static function handleResponse(ResponseInterface $response): stdClass
     {
         $statusCode = $response->getStatusCode();
-        $result = json_decode($response->getBody()->getContents(), false);
-        $isJson = strpos($response->getHeaderLine('Content-Type'), 'application/json') !== false;
+        $body = $response->getBody()->getContents();
 
         if ($statusCode >= 400) {
+            $isJson = strpos($response->getHeaderLine('Content-Type'), 'application/json') !== false;
+            $result = $isJson ? self::decode($body) : (object) [];
             $error = $isJson ? $result->error : (object) ['message' => $response->getReasonPhrase()];
             self::throwError($statusCode, $error);
         }
 
-        return $result;
+        return self::decode($body);
+    }
+
+    /**
+     * @param string $body
+     * @return object
+     * @throws JsonException
+     */
+    private static function decode(string $body): object
+    {
+        return json_decode($body, false, 512, JSON_THROW_ON_ERROR);
     }
 
     /**
