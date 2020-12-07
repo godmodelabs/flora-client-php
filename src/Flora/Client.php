@@ -39,7 +39,7 @@ class Client
      *      @var string[]               $forceGetParams         optional    Params always send as part of the url
      * }
      */
-    public function __construct($url, array $opts = [])
+    public function __construct(string $url, array $opts = [])
     {
         $this->httpClient = isset($opts['httpClient']) && $opts['httpClient'] instanceof HttpClient
             ? $opts['httpClient']

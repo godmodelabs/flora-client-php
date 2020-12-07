@@ -10,7 +10,7 @@ if (!function_exists('Flora\stringify_select')) {
      * @return string
      * @throws InvalidArgumentException
      */
-    function stringify_select(array $spec)
+    function stringify_select(array $spec): string
     {
         $items = array_map(static function ($item, $key) {
             if (!is_numeric($key) && is_array($item)) {
