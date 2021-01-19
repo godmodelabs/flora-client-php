@@ -15,7 +15,7 @@ $response = $client->execute([
 ## Asynchronous requests (using `guzzlehttp/promises`)
 
 ```php
-use function GuzzleHttp\Promise\unwrap;
+use GuzzleHttp\Promise;
 
 $client = new \Flora\Client('http://api.example.com/');
 try {
@@ -28,7 +28,7 @@ try {
         'select' => 'id,name'
     ]);
     
-    [$fooResponse, $barResponse] = unwrap([$fooPromise, $barPromise]);
+    [$fooResponse, $barResponse] = Promise\Utils::unwrap([$fooPromise, $barPromise]);
     // process responses...
 } catch (Throwable $e) {
     echo $e->getMessage(), PHP_EOL;
