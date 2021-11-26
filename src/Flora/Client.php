@@ -132,6 +132,7 @@ class Client
     /**
      * @param ResponseInterface $response
      * @return stdClass
+     * @throws JsonException
      */
     private static function handleResponse(ResponseInterface $response): stdClass
     {
