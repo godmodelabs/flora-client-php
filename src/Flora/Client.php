@@ -6,8 +6,8 @@ use Closure;
 use Flora\Exception\ImplementationException;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Promise\PromiseInterface;
+use GuzzleHttp\Promise\Utils;
 use JsonException;
-use function GuzzleHttp\Promise\unwrap;
 use GuzzleHttp\Psr7\Uri;
 use GuzzleHttp\Client as HttpClient;
 use Psr\Http\Message\ResponseInterface;
@@ -126,7 +126,7 @@ class Client
     public function executeParallel(array $params): array
     {
         $promises = array_map([$this, 'executeAsync'], $params);
-        return unwrap($promises);
+        return Utils::unwrap($promises);
     }
 
     /**

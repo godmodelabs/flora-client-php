@@ -2,7 +2,7 @@
 
 namespace Flora;
 
-use function GuzzleHttp\Psr7\stream_for;
+use GuzzleHttp\Psr7\Utils;
 use Psr\Http\Message\RequestInterface;
 
 class PostRequestFactory
@@ -20,7 +20,7 @@ class PostRequestFactory
             return $request
                 ->withUri($request->getUri()->withQuery(http_build_query($params)))
                 ->withHeader('Content-Type', 'application/json')
-                ->withBody(stream_for(json_encode($data)));
+                ->withBody(Utils::streamFor(json_encode($data)));
         }
 
         if (!empty($forceGetParams)) {
@@ -39,6 +39,6 @@ class PostRequestFactory
 
         return $request
             ->withAddedHeader('Content-Type', 'application/x-www-form-urlencoded')
-            ->withBody(stream_for(http_build_query($params)));
+            ->withBody(Utils::streamFor(http_build_query($params)));
     }
 }
