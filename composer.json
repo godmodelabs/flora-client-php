@@ -33,12 +33,12 @@
     },
     "prefer-stable": true,
     "require": {
-        "php": "^7.3 || ~8.0.0 || ~8.1.0 || ~8.2.0",
+        "php": "^7.3 || ~8.0.0 || ~8.1.0 || ~8.2.0 || ~8.3.0",
         "ext-json": "*",
         "guzzlehttp/guzzle": "^7.4"
     },
     "require-dev": {
         "http-interop/http-factory-guzzle": "^1.0",
-        "phpunit/phpunit": "^9.0"
+        "phpunit/phpunit": "^9.0 || ^10.5"
     }
 }
