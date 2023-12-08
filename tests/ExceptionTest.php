@@ -96,7 +96,7 @@ class ExceptionTest extends TestCase
         $client->execute([]);
     }
 
-    public function requestExceptionDataProvider(): array
+    public static function requestExceptionDataProvider(): array
     {
         return [
             'bad request' => [
@@ -158,7 +158,7 @@ class ExceptionTest extends TestCase
         ];
     }
 
-    public function exceptionClassDataProvider(): array
+    public static function exceptionClassDataProvider(): array
     {
         return [
             [BadRequestException::class],

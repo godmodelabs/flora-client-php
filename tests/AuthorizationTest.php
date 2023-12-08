@@ -63,7 +63,7 @@ class AuthorizationTest extends TestCase
         /** @var MockObject|AuthProviderInterface $authProviderMock */
         $authProviderMock = $this->getMockBuilder(AuthProviderInterface::class)
             ->disableOriginalConstructor()
-            ->setMethods(['auth'])
+            ->onlyMethods(['auth'])
             ->getMock();
 
         $authProviderMock

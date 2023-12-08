@@ -33,7 +33,7 @@ class ParameterTest extends TestCase
         self::assertEquals($name . '=' . $encoded, $request->getUri()->getQuery());
     }
 
-    public function parameters(): array
+    public static function parameters(): array
     {
         return [
             ['select', 'id,address.city,comments(order=ts:desc)[id,body]', 'id%2Caddress.city%2Ccomments%28order%3Dts%3Adesc%29%5Bid%2Cbody%5D'],
@@ -110,7 +110,7 @@ class ParameterTest extends TestCase
         /** @var MockObject|AuthProviderInterface $authProviderMock */
         $authProviderMock = $this->getMockBuilder(AuthProviderInterface::class)
             ->disableOriginalConstructor()
-            ->setMethods(['auth'])
+            ->onlyMethods(['auth'])
             ->getMock();
 
         $authProviderMock
@@ -198,7 +198,7 @@ class ParameterTest extends TestCase
         self::assertStringNotContainsString('client_id=1', $request->getBody()->getContents());
     }
 
-    public function forceGetParamProvider(): array
+    public static function forceGetParamProvider(): array
     {
         return [
             ['client_id'],

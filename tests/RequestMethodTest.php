@@ -79,7 +79,7 @@ class RequestMethodTest extends TestCase
         self::assertEquals('action=create', $request->getUri()->getQuery());
     }
 
-    public function defaultHttpMethodDataProvider(): array
+    public static function defaultHttpMethodDataProvider(): array
     {
         return [
             [['resource' => 'user', 'id' => 1337], 'Use GET method fallback if action parameter is empty'],
