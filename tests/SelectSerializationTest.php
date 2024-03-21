@@ -10,12 +10,12 @@ class SelectSerializationTest extends TestCase
 {
     public function testSimpleArray(): void
     {
-        self::assertEquals('id,name', stringify_select(['id', 'name']));
+        self::assertSame('id,name', stringify_select(['id', 'name']));
     }
 
     public function testNestedArrays(): void
     {
-        self::assertEquals('id,name,attr1,attr2', stringify_select(['id', 'name', ['attr1', 'attr2']]));
+        self::assertSame('id,name,attr1,attr2', stringify_select(['id', 'name', ['attr1', 'attr2']]));
     }
 
     public function testNestedArraysWithNonNumericKeys(): void
@@ -27,12 +27,12 @@ class SelectSerializationTest extends TestCase
             'attr'
         ];
 
-        self::assertEquals('id,name,subGroup[attr1,attr2],attr', stringify_select($spec));
+        self::assertSame('id,name,subGroup[attr1,attr2],attr', stringify_select($spec));
     }
 
     public function testNonNumericKeysWithNonArrayValues(): void
     {
-        self::assertEquals('subGroup.attr', stringify_select(['subGroup' => 'attr']));
+        self::assertSame('subGroup.attr', stringify_select(['subGroup' => 'attr']));
     }
 
     public function testNestedNonNumericArrays(): void
@@ -41,7 +41,7 @@ class SelectSerializationTest extends TestCase
             'subGroup' => ['subSubGroup' => 'attr']
         ];
 
-        self::assertEquals('subGroup.subSubGroup.attr', stringify_select($spec));
+        self::assertSame('subGroup.subSubGroup.attr', stringify_select($spec));
     }
 
     public function testDeeplyNestedArrays(): void
@@ -62,12 +62,12 @@ class SelectSerializationTest extends TestCase
         ];
 
         $selectString = 'id,name,subGroupA[id,name,subSubGroupA[attr1,attr2],subSubGroupB[subSubSubGroupA[attr1,attr2],subSubSubItem,subSubSubGroupB[attr1,attr2]]]';
-        self::assertEquals($selectString, stringify_select($spec));
+        self::assertSame($selectString, stringify_select($spec));
     }
 
     public function testSingleItemSubItemGroup(): void
     {
-        self::assertEquals('group.attr', stringify_select(['group' => ['attr']]));
+        self::assertSame('group.attr', stringify_select(['group' => ['attr']]));
     }
 
     public function testError(): void

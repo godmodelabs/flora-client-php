@@ -52,7 +52,7 @@ class AuthorizationTest extends TestCase
         ]);
 
         self::assertTrue($request->hasHeader('Authorization'), 'Authorization header not available');
-        self::assertEquals(['am9obmRvZTpzZWNyZXQ='], $request->getHeader('Authorization'));
+        self::assertSame('am9obmRvZTpzZWNyZXQ=', $request->getHeaderLine('Authorization'));
     }
 
     /**

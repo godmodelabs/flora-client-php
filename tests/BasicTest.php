@@ -21,7 +21,7 @@ class BasicTest extends TestCase
     public function testApiHost(): void
     {
         $request = (new ApiRequestFactory($this->uri))->create(['resource' => 'user']);
-        self::assertEquals(['api.example.com'], $request->getHeader('Host'));
+        self::assertSame('api.example.com', $request->getHeaderLine('Host'));
     }
 
     public function testResourceInUrl(): void
@@ -29,7 +29,7 @@ class BasicTest extends TestCase
         $request = (new ApiRequestFactory($this->uri))->create(['resource' => 'user']);
         $uri = $request->getUri();
 
-        self::assertEquals('/user/', $uri->getPath());
+        self::assertSame('/user/', $uri->getPath());
         self::assertStringNotContainsString('resource=', $uri->getQuery());
     }
 

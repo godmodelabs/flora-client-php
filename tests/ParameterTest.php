@@ -30,7 +30,7 @@ class ParameterTest extends TestCase
     public function testRequestParameter($name, $value, $encoded): void
     {
         $request = (new ApiRequestFactory($this->uri))->create(['resource' => 'user', $name => $value]);
-        self::assertEquals($name . '=' . $encoded, $request->getUri()->getQuery());
+        self::assertSame("{$name}={$encoded}", $request->getUri()->getQuery());
     }
 
     public static function parameters(): array
@@ -64,8 +64,8 @@ class ParameterTest extends TestCase
                 ]
             ]);
 
-        self::assertEquals(['application/json'], $request->getHeader('Content-Type'));
-        self::assertEquals('{"title":"Lorem Ipsum","author":{"id":1337}}', (string) $request->getBody());
+        self::assertSame('application/json', $request->getHeaderLine('Content-Type'));
+        self::assertSame('{"title":"Lorem Ipsum","author":{"id":1337}}', (string) $request->getBody());
     }
 
     public function testFormatParameter(): void
@@ -77,7 +77,7 @@ class ParameterTest extends TestCase
                 'format'    => 'image'
             ]);
 
-        self::assertEquals('/user/1337.image', $request->getUri()->getPath());
+        self::assertSame('/user/1337.image', $request->getUri()->getPath());
         self::assertStringNotContainsString('format=', $request->getUri()->getQuery());
     }
 
@@ -102,7 +102,7 @@ class ParameterTest extends TestCase
                 'filter'    => 'address.country.iso2=AT'
             ]);
 
-        self::assertEquals($expectedQueryString, $request->getUri()->getQuery());
+        self::assertSame($expectedQueryString, $request->getUri()->getQuery());
     }
 
     public function testAuthorizeParameter(): void
