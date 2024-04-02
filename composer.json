@@ -40,5 +40,8 @@
     "require-dev": {
         "http-interop/http-factory-guzzle": "^1.0",
         "phpunit/phpunit": "^9.0 || ^10.5"
+    },
+    "archive": {
+        "exclude": [".github/", "tests/", "phpunit.xml.dist"]
     }
 }
