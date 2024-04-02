@@ -12,6 +12,19 @@ $response = $client->execute([
 ]);
 ```
 
+## Raw responses
+
+Return PSR-7 [response object](https://github.com/php-fig/http-message/blob/master/src/ResponseInterface.php) (e.g. to handle binary data).
+
+```php
+$client = new \Flora\Client('http://api.example.com/');
+$response = $client->executeRaw([
+    'resource' => 'article',
+    'id' => 1337,
+    'action' => 'pdf',
+]);
+```
+
 ## Asynchronous requests (using `guzzlehttp/promises`)
 
 ```php

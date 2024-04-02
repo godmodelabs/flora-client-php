@@ -129,6 +129,12 @@ class Client
         return Utils::unwrap($promises);
     }
 
+    public function executeRaw(array $params): ResponseInterface
+    {
+        $request = $this->requestFactory->create($params);
+        return $this->httpClient->sendRequest($request);
+    }
+
     /**
      * @param ResponseInterface $response
      * @return stdClass
