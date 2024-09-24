@@ -4,10 +4,10 @@ namespace Flora\Client\Test;
 
 use Flora\ApiRequestFactory;
 use GuzzleHttp\Psr7\Uri;
-use PHPUnit\Framework\TestCase;
+use PHPUnit;
 use Psr\Http\Message\UriInterface;
 
-class RequestMethodTest extends TestCase
+class RequestMethodTest extends PHPUnit\Framework\TestCase
 {
     /** @var UriInterface */
     private $uri;
@@ -18,11 +18,7 @@ class RequestMethodTest extends TestCase
         $this->uri = new Uri('http://api.example.com');
     }
 
-    /**
-     * @param array $params
-     * @param string $message
-     * @dataProvider defaultHttpMethodDataProvider
-     */
+    #[PHPUnit\Framework\Attributes\DataProvider('defaultHttpMethodDataProvider')]
     public function testHttpGetMethod(array $params, string $message): void
     {
         $request = (new ApiRequestFactory($this->uri))->create($params);

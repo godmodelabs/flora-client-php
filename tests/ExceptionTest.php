@@ -16,17 +16,17 @@ use Flora\Exception\TransferException;
 use Flora\Exception\UnauthorizedException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\{Request};
-use PHPUnit\Framework\TestCase;
+use PHPUnit;
 use Psr\Http\Message\ResponseInterface;
 
-class ExceptionTest extends TestCase
+class ExceptionTest extends PHPUnit\Framework\TestCase
 {
     /**
      * @param string $exceptionClass
      * @param string $message
      * @param ResponseInterface $response
-     * @dataProvider requestExceptionDataProvider
      */
+    #[PHPUnit\Framework\Attributes\DataProvider('requestExceptionDataProvider')]
     public function testRequestExceptions(string $exceptionClass, string $message, ResponseInterface $response): void
     {
         $this->expectException($exceptionClass);

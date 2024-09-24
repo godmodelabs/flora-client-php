@@ -4,13 +4,12 @@ namespace Flora\Client\Test;
 
 use Flora\ApiRequestFactory;
 use GuzzleHttp\Psr7\Uri;
-use PHPUnit\Framework\MockObject\MockObject;
-use PHPUnit\Framework\TestCase;
+use PHPUnit;
 use Psr\Http\Message\RequestInterface;
 use Flora\AuthProviderInterface;
 use Psr\Http\Message\UriInterface;
 
-class ParameterTest extends TestCase
+class ParameterTest extends PHPUnit\Framework\TestCase
 {
     /** @var UriInterface */
     private $uri;
@@ -22,11 +21,11 @@ class ParameterTest extends TestCase
     }
 
     /**
-     * @dataProvider parameters
      * @param string        $name      Parameter name
      * @param string|int    $value     Parameter value
      * @param string        $encoded   URL-encoded parameter value
      */
+    #[PHPUnit\Framework\Attributes\DataProvider('parameters')]
     public function testRequestParameter($name, $value, $encoded): void
     {
         $request = (new ApiRequestFactory($this->uri))->create(['resource' => 'user', $name => $value]);
@@ -107,7 +106,7 @@ class ParameterTest extends TestCase
 
     public function testAuthorizeParameter(): void
     {
-        /** @var MockObject|AuthProviderInterface $authProviderMock */
+        /** @var PHPUnit\Framework\MockObject\MockObject|AuthProviderInterface $authProviderMock */
         $authProviderMock = $this->getMockBuilder(AuthProviderInterface::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['auth'])
