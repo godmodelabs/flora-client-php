@@ -40,10 +40,7 @@ class ExceptionTest extends PHPUnit\Framework\TestCase
         $client->execute(['resource' => 'user', 'id' => 1337]);
     }
 
-    /**
-     * @param string $exceptionClass
-     * @dataProvider exceptionClassDataProvider
-     */
+    #[PHPUnit\Framework\Attributes\DataProvider('exceptionClassDataProvider')]
     public function testExceptionBaseClass(string $exceptionClass): void
     {
         self::assertInstanceOf(FloraException::class, new $exceptionClass());

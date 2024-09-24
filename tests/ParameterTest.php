@@ -148,10 +148,7 @@ class ParameterTest extends PHPUnit\Framework\TestCase
         self::assertStringContainsString('portalId=4711', $request->getUri()->getQuery());
     }
 
-    /**
-     * @param string $param
-     * @dataProvider forceGetParamProvider
-     */
+    #[PHPUnit\Framework\Attributes\DataProvider('forceGetParamProvider')]
     public function testDefaultGetParameters(string $param): void
     {
         $response = ResponseFactory::create()
