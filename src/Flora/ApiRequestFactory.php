@@ -14,7 +14,7 @@ class ApiRequestFactory
 
     public function __construct(
         UriInterface $uri,
-        AuthProviderInterface $authProvider = null,
+        ?AuthProviderInterface $authProvider = null,
         array $defaultParams = [],
         array $forceGetParams = []
     )
