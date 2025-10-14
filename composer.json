@@ -33,7 +33,7 @@
     },
     "prefer-stable": true,
     "require": {
-        "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
+        "php": "~8.2.0 || ~8.3.0 || ~8.4.0 || ~8.5.0",
         "guzzlehttp/guzzle": "^7.4"
     },
     "require-dev": {
