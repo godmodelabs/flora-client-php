@@ -8,7 +8,7 @@ class RequestFactory
 {
     public static function create(string $method, $uri): RequestInterface
     {
-        return (new \Http\Factory\Guzzle\RequestFactory())
+        return (new \GuzzleHttp\Psr7\HttpFactory())
             ->createRequest($method, $uri);
     }
 }

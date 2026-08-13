@@ -2,7 +2,7 @@
 
 namespace Flora\Client\Test;
 
-use Http\Factory\Guzzle\ResponseFactory as GuzzleResponseFactory;
+use GuzzleHttp\Psr7\HttpFactory as GuzzleResponseFactory;
 use Psr\Http\Message\ResponseInterface;
 
 class ResponseFactory

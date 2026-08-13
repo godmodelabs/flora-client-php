@@ -2,7 +2,7 @@
 
 namespace Flora\Client\Test;
 
-use Http\Factory\Guzzle\StreamFactory as GuzzleStreamFactory;
+use GuzzleHttp\Psr7\HttpFactory as GuzzleStreamFactory;
 use Psr\Http\Message\StreamInterface;
 
 class StreamFactory
