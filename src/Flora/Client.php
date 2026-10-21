@@ -148,8 +148,9 @@ class Client
         if ($statusCode >= 400) {
             $isJson = strpos($response->getHeaderLine('Content-Type'), 'application/json') !== false;
             $result = $isJson ? self::decode($body) : (object) [];
-            $error = $isJson ? $result->error : (object) ['message' => $response->getReasonPhrase()];
-            self::throwError($statusCode, $error);
+            $apiMessage = $isJson ? ($result?->error?->message ?? null) : null;
+            $message = $apiMessage ?: $response->getReasonPhrase();
+            self::throwError($statusCode, $message);
         }
 
         return self::decode($body);
@@ -178,7 +179,7 @@ class Client
 
     /**
      * @param int $statusCode
-     * @param stdClass $error
+     * @param string $message
      * @throws Exception\RuntimeException
      * @throws Exception\BadRequestException
      * @throws Exception\ForbiddenException
@@ -187,10 +188,8 @@ class Client
      * @throws Exception\ServiceUnavailableException
      * @throws Exception\UnauthorizedException
      */
-    private static function throwError(int $statusCode, stdClass $error): void
+    private static function throwError(int $statusCode, string $message): void
     {
-        $message = $error->message;
-
         if ($statusCode === 400) throw new Exception\BadRequestException($message);
         else if ($statusCode === 401) throw new Exception\UnauthorizedException($message);
         else if ($statusCode === 403) throw new Exception\ForbiddenException($message);

@@ -151,7 +151,14 @@ class ExceptionTest extends PHPUnit\Framework\TestCase
                 ResponseFactory::create(504, 'Gateway Timeout')
                     ->withHeader('Content-Type', 'text/html')
                     ->withBody(StreamFactory::create('<html lang="en"><body><h1>Gateway Timeout</h1></body></html>'))
-            ]
+            ],
+            'no message fallback' => [
+                NotFoundException::class,
+                'Not Found',
+                ResponseFactory::create(404)
+                    ->withHeader('Content-Type', 'application/json')
+                    ->withBody(StreamFactory::create('{"meta":{},"data":null,"error":{"code":"ERR_NOT_FOUND"},"cursor":null}'))
+            ],
         ];
     }
 
