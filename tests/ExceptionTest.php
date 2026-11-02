@@ -7,6 +7,7 @@ use Flora\Exception\BadRequestException;
 use Flora\Exception\ExceptionInterface as FloraException;
 use Flora\Exception\ForbiddenException;
 use Flora\Exception\GatewayTimeoutException;
+use Flora\Exception\GoneException;
 use Flora\Exception\ImplementationException;
 use Flora\Exception\NotFoundException;
 use Flora\Exception\RuntimeException;
@@ -121,6 +122,13 @@ class ExceptionTest extends PHPUnit\Framework\TestCase
                 NotFoundException::class,
                 'Item not found',
                 ResponseFactory::create(404)
+                    ->withHeader('Content-Type', 'application/json')
+                    ->withBody(StreamFactory::create('{"meta":{},"data":null,"error":{"message":"Item not found"},"cursor":null}'))
+            ],
+            'gone' => [
+                GoneException::class,
+                'Item not found',
+                ResponseFactory::create(410)
                     ->withHeader('Content-Type', 'application/json')
                     ->withBody(StreamFactory::create('{"meta":{},"data":null,"error":{"message":"Item not found"},"cursor":null}'))
             ],

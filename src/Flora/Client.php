@@ -194,6 +194,7 @@ class Client
         else if ($statusCode === 401) throw new Exception\UnauthorizedException($message);
         else if ($statusCode === 403) throw new Exception\ForbiddenException($message);
         else if ($statusCode === 404) throw new Exception\NotFoundException($message);
+        else if ($statusCode === 410) throw new Exception\GoneException($message);
         else if ($statusCode === 500) throw new Exception\ServerException($message);
         else if ($statusCode === 502) throw new Exception\BadGatewayException($message);
         else if ($statusCode === 503) throw new Exception\ServiceUnavailableException($message);
